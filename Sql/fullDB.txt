@@ -1,0 +1,626 @@
+/* ==========================================================
+   DDL: ASP.NET Core Identity + RBAC (Role) + Feature Toggle
+   + Domain: Shop/Branch/Subscription/Billing/Product/Variant/
+             Inventory/Serial/Employee/Customer/Coupon/Order/
+             Payment/ErrorLog + Views báo cáo
+   SQL Server compatible
+   ========================================================== */
+
+SET NOCOUNT ON;
+SET XACT_ABORT ON;
+BEGIN TRAN;
+
+-------------------------------------------------------------
+-- 0) SCHEMA chuẩn ASP.NET Identity
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.AspNetRoles', N'U') IS NULL
+CREATE TABLE dbo.AspNetRoles(
+  Id NVARCHAR(450) NOT NULL PRIMARY KEY,
+  [Name] NVARCHAR(256) NULL,
+  NormalizedName NVARCHAR(256) NULL,
+  ConcurrencyStamp NVARCHAR(MAX) NULL
+);
+
+IF OBJECT_ID(N'dbo.AspNetUsers', N'U') IS NULL
+CREATE TABLE dbo.AspNetUsers(
+  Id NVARCHAR(450) NOT NULL PRIMARY KEY,
+  UserName NVARCHAR(256) NULL,
+  NormalizedUserName NVARCHAR(256) NULL,
+  Email NVARCHAR(256) NULL,
+  NormalizedEmail NVARCHAR(256) NULL,
+  EmailConfirmed BIT NOT NULL DEFAULT(0),
+  PasswordHash NVARCHAR(MAX) NULL,
+  SecurityStamp NVARCHAR(MAX) NULL,
+  ConcurrencyStamp NVARCHAR(MAX) NULL,
+  PhoneNumber NVARCHAR(MAX) NULL,
+  PhoneNumberConfirmed BIT NOT NULL DEFAULT(0),
+  TwoFactorEnabled BIT NOT NULL DEFAULT(0),
+  LockoutEnd DATETIMEOFFSET NULL,
+  LockoutEnabled BIT NOT NULL DEFAULT(0),
+  AccessFailedCount INT NOT NULL DEFAULT(0),
+
+  -- Tùy chọn: hint tenant/chi nhánh đang chọn (không bắt buộc)
+  CurrentShopId BIGINT NULL,
+  CurrentBranchId BIGINT NULL
+);
+
+IF OBJECT_ID(N'dbo.AspNetRoleClaims', N'U') IS NULL
+CREATE TABLE dbo.AspNetRoleClaims(
+  Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+  RoleId NVARCHAR(450) NOT NULL,
+  ClaimType NVARCHAR(MAX) NULL,
+  ClaimValue NVARCHAR(MAX) NULL,
+  CONSTRAINT FK_RoleClaims_Role FOREIGN KEY(RoleId) REFERENCES dbo.AspNetRoles(Id) ON DELETE CASCADE
+);
+
+IF OBJECT_ID(N'dbo.AspNetUserClaims', N'U') IS NULL
+CREATE TABLE dbo.AspNetUserClaims(
+  Id INT IDENTITY(1,1) NOT NULL PRIMARY KEY,
+  UserId NVARCHAR(450) NOT NULL,
+  ClaimType NVARCHAR(MAX) NULL,
+  ClaimValue NVARCHAR(MAX) NULL,
+  CONSTRAINT FK_UserClaims_User FOREIGN KEY(UserId) REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE
+);
+
+IF OBJECT_ID(N'dbo.AspNetUserLogins', N'U') IS NULL
+CREATE TABLE dbo.AspNetUserLogins(
+  LoginProvider NVARCHAR(128) NOT NULL,
+  ProviderKey NVARCHAR(128) NOT NULL,
+  ProviderDisplayName NVARCHAR(MAX) NULL,
+  UserId NVARCHAR(450) NOT NULL,
+  CONSTRAINT PK_UserLogins PRIMARY KEY(LoginProvider, ProviderKey),
+  CONSTRAINT FK_UserLogins_User FOREIGN KEY(UserId) REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE
+);
+
+IF OBJECT_ID(N'dbo.AspNetUserRoles', N'U') IS NULL
+CREATE TABLE dbo.AspNetUserRoles(
+  UserId NVARCHAR(450) NOT NULL,
+  RoleId NVARCHAR(450) NOT NULL,
+  CONSTRAINT PK_UserRoles PRIMARY KEY(UserId, RoleId),
+  CONSTRAINT FK_UserRoles_User FOREIGN KEY(UserId) REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE,
+  CONSTRAINT FK_UserRoles_Role FOREIGN KEY(RoleId) REFERENCES dbo.AspNetRoles(Id) ON DELETE CASCADE
+);
+
+IF OBJECT_ID(N'dbo.AspNetUserTokens', N'U') IS NULL
+CREATE TABLE dbo.AspNetUserTokens(
+  UserId NVARCHAR(450) NOT NULL,
+  LoginProvider NVARCHAR(128) NOT NULL,
+  [Name] NVARCHAR(128) NOT NULL,
+  [Value] NVARCHAR(MAX) NULL,
+  CONSTRAINT PK_UserTokens PRIMARY KEY(UserId, LoginProvider, [Name]),
+  CONSTRAINT FK_UserTokens_User FOREIGN KEY(UserId) REFERENCES dbo.AspNetUsers(Id) ON DELETE CASCADE
+);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='RoleNameIndex' AND object_id=OBJECT_ID('dbo.AspNetRoles'))
+  CREATE UNIQUE INDEX RoleNameIndex ON dbo.AspNetRoles (NormalizedName) WHERE NormalizedName IS NOT NULL;
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='EmailIndex' AND object_id=OBJECT_ID('dbo.AspNetUsers'))
+  CREATE INDEX EmailIndex ON dbo.AspNetUsers (NormalizedEmail);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='UserNameIndex' AND object_id=OBJECT_ID('dbo.AspNetUsers'))
+  CREATE UNIQUE INDEX UserNameIndex ON dbo.AspNetUsers (NormalizedUserName) WHERE NormalizedUserName IS NOT NULL;
+
+-------------------------------------------------------------
+-- 1) Feature Toggle + ánh xạ theo Role
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.Feature', N'U') IS NULL
+CREATE TABLE dbo.Feature(
+  Id INT IDENTITY(1,1) PRIMARY KEY,
+  Code NVARCHAR(100) NOT NULL UNIQUE,
+  [Name] NVARCHAR(200) NOT NULL,
+  [Description] NVARCHAR(400) NULL
+);
+
+IF OBJECT_ID(N'dbo.RoleFeature', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.RoleFeature(
+    Id INT IDENTITY(1,1) PRIMARY KEY,
+    RoleId NVARCHAR(450) NOT NULL,
+    FeatureId INT NOT NULL,
+    IsEnabled BIT NOT NULL DEFAULT(1),
+    CONSTRAINT FK_RoleFeature_Role FOREIGN KEY(RoleId) REFERENCES dbo.AspNetRoles(Id) ON DELETE CASCADE,
+    CONSTRAINT FK_RoleFeature_Feature FOREIGN KEY(FeatureId) REFERENCES dbo.Feature(Id) ON DELETE CASCADE
+  );
+  CREATE UNIQUE INDEX UX_RoleFeature_Role_Feature ON dbo.RoleFeature(RoleId, FeatureId);
+END
+
+-------------------------------------------------------------
+-- 2) Shop / Branch (có MST)
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.Shop', N'U') IS NULL
+CREATE TABLE dbo.Shop(
+  ShopId BIGINT IDENTITY PRIMARY KEY,
+  Code NVARCHAR(50) NOT NULL UNIQUE,
+  [Name] NVARCHAR(200) NOT NULL,
+  [Address] NVARCHAR(500) NULL,
+  OwnerUserId NVARCHAR(450) NULL REFERENCES dbo.AspNetUsers(Id),
+  IsActive BIT NOT NULL DEFAULT(1),
+  CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+IF OBJECT_ID(N'dbo.Branch', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.Branch(
+    BranchId BIGINT IDENTITY PRIMARY KEY,
+    ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+    Code NVARCHAR(50) NOT NULL,
+    [Name] NVARCHAR(200) NOT NULL,
+    [Address] NVARCHAR(500) NULL,
+    Phone NVARCHAR(30) NULL,
+    TaxCode NVARCHAR(50) NULL,  -- MST
+    IsActive BIT NOT NULL DEFAULT(1),
+    CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    ModifiedAt DATETIME2 NULL,
+    RowVersion ROWVERSION,
+    CONSTRAINT UX_Branch_Shop_Code UNIQUE(ShopId, Code)
+  );
+END
+
+-------------------------------------------------------------
+-- 3) Subscription (Plan / ShopSubscription / Billing)
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.SubscriptionPlan', N'U') IS NULL
+CREATE TABLE dbo.SubscriptionPlan(
+  PlanId INT IDENTITY PRIMARY KEY,
+  Code NVARCHAR(50) NOT NULL UNIQUE,
+  [Name] NVARCHAR(200) NOT NULL,
+  PricePerMonth DECIMAL(18,2) NOT NULL,
+  MaxUsers INT NULL,
+  MaxBranches INT NULL,
+  FeaturesJson NVARCHAR(MAX) NULL,
+  IsActive BIT NOT NULL DEFAULT(1)
+);
+
+IF OBJECT_ID(N'dbo.ShopSubscription', N'U') IS NULL
+CREATE TABLE dbo.ShopSubscription(
+  ShopSubId BIGINT IDENTITY PRIMARY KEY,
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  PlanId INT NOT NULL REFERENCES dbo.SubscriptionPlan(PlanId),
+  StartDate DATE NOT NULL,
+  EndDate DATE NOT NULL,
+  AutoRenew BIT NOT NULL DEFAULT(1),
+  Status TINYINT NOT NULL DEFAULT(1),
+  CONSTRAINT UX_ShopSub UNIQUE(ShopId, PlanId, StartDate)
+);
+
+IF OBJECT_ID(N'dbo.BillingTransaction', N'U') IS NULL
+CREATE TABLE dbo.BillingTransaction(
+  BillId BIGINT IDENTITY PRIMARY KEY,
+  ShopSubId BIGINT NOT NULL REFERENCES dbo.ShopSubscription(ShopSubId),
+  PeriodFrom DATE NOT NULL,
+  PeriodTo DATE NOT NULL,
+  Amount DECIMAL(18,2) NOT NULL,
+  PaidAt DATETIME2 NULL,
+  PaymentRef NVARCHAR(100) NULL,
+  [Method] NVARCHAR(30) NULL,        -- CARD/TRANSFER/INVOICE...
+  [Status] NVARCHAR(20) NOT NULL DEFAULT N'PENDING' -- PENDING/PAID/FAILED/REFUNDED
+);
+
+-------------------------------------------------------------
+-- 4) Product + Variant + Inventory + Serial
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.Brand', N'U') IS NULL
+CREATE TABLE dbo.Brand(
+  BrandId INT IDENTITY PRIMARY KEY,
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  [Name] NVARCHAR(120) NOT NULL,
+  CONSTRAINT UX_Brand UNIQUE(ShopId, [Name])
+);
+
+IF OBJECT_ID(N'dbo.Product', N'U') IS NULL
+CREATE TABLE dbo.Product(
+  ProductId BIGINT IDENTITY PRIMARY KEY,
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  Code NVARCHAR(50) NULL,
+  [Name] NVARCHAR(300) NOT NULL,
+  BrandId INT NULL REFERENCES dbo.Brand(BrandId),
+  CanSell BIT NOT NULL DEFAULT(1),
+  [Unit] NVARCHAR(50) NOT NULL DEFAULT N'Cái',
+  [Description] NVARCHAR(MAX) NULL,
+  ImagePath NVARCHAR(300) NULL,
+  IsDeleted BIT NOT NULL DEFAULT(0),
+  CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+  ModifiedAt DATETIME2 NULL,
+  RowVersion ROWVERSION,
+  CONSTRAINT UX_Product UNIQUE(ShopId, Code)
+);
+
+IF OBJECT_ID(N'dbo.ProductVariant', N'U') IS NULL
+CREATE TABLE dbo.ProductVariant(
+  VariantId BIGINT IDENTITY PRIMARY KEY,
+  ProductId BIGINT NOT NULL REFERENCES dbo.Product(ProductId),
+  Sku NVARCHAR(100) NOT NULL,
+  Barcode NVARCHAR(128) NULL,
+  OptionSummary NVARCHAR(300) NULL,
+  CostPrice DECIMAL(18,2) NULL,
+  TrackSerial BIT NOT NULL DEFAULT(0),
+  IsDeleted BIT NOT NULL DEFAULT(0),
+  RowVersion ROWVERSION,
+  CONSTRAINT UX_Variant UNIQUE(ProductId, Sku)
+);
+
+IF OBJECT_ID(N'dbo.Inventory', N'U') IS NULL
+CREATE TABLE dbo.Inventory(
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  BranchId BIGINT NOT NULL REFERENCES dbo.Branch(BranchId),
+  VariantId BIGINT NOT NULL REFERENCES dbo.ProductVariant(VariantId),
+  OnHand INT NOT NULL DEFAULT(0),
+  Allocated INT NOT NULL DEFAULT(0),
+  InTransit INT NOT NULL DEFAULT(0),
+  CONSTRAINT PK_Inventory PRIMARY KEY(ShopId, BranchId, VariantId)
+);
+
+IF OBJECT_ID(N'dbo.InventorySerial', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.InventorySerial(
+    SerialId BIGINT IDENTITY PRIMARY KEY,
+    ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+    BranchId BIGINT NOT NULL REFERENCES dbo.Branch(BranchId),
+    VariantId BIGINT NOT NULL REFERENCES dbo.ProductVariant(VariantId),
+    SerialNo NVARCHAR(100) NOT NULL,
+    [Status] NVARCHAR(20) NOT NULL DEFAULT N'ON_HAND', -- ON_HAND/ALLOCATED/SOLD/RETURNED/WARRANTY
+    CONSTRAINT UX_InvSerial UNIQUE(ShopId, BranchId, VariantId, SerialNo)
+  );
+  CREATE INDEX IX_InvSerial_Status ON dbo.InventorySerial([Status]);
+END
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Variant_Sku' AND object_id=OBJECT_ID('dbo.ProductVariant'))
+  CREATE INDEX IX_Variant_Sku ON dbo.ProductVariant(Sku) INCLUDE(ProductId, TrackSerial);
+
+-------------------------------------------------------------
+-- 5) Employee (map sang AspNetUsers)
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.Employee', N'U') IS NULL
+CREATE TABLE dbo.Employee(
+  EmployeeId BIGINT IDENTITY PRIMARY KEY,
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  UserId NVARCHAR(450) NOT NULL REFERENCES dbo.AspNetUsers(Id),
+  BranchId BIGINT NULL REFERENCES dbo.Branch(BranchId),
+  [Title] NVARCHAR(100) NULL,
+  HiredDate DATE NULL,
+  IsActive BIT NOT NULL DEFAULT(1),
+  CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+  CONSTRAINT UX_Employee UNIQUE(ShopId, UserId)
+);
+
+-------------------------------------------------------------
+-- 6) Customer (có TaxCode)
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.Customer', N'U') IS NULL
+CREATE TABLE dbo.Customer(
+  CustomerId BIGINT IDENTITY PRIMARY KEY,
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  Code NVARCHAR(50) NULL,
+  FullName NVARCHAR(200) NOT NULL,
+  Phone NVARCHAR(30) NULL,
+  Email NVARCHAR(200) NULL,
+  TaxCode NVARCHAR(50) NULL,
+  Gender TINYINT NULL,
+  BirthDate DATE NULL,
+  [Address] NVARCHAR(500) NULL,
+  Note NVARCHAR(1000) NULL,
+  IsArchived BIT NOT NULL DEFAULT(0),
+  CreatedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+  RowVersion ROWVERSION,
+  CONSTRAINT UX_Customer UNIQUE(ShopId, Code)
+);
+
+-------------------------------------------------------------
+-- 7) Coupon + áp cho sản phẩm + log redeem
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.Coupon', N'U') IS NULL
+CREATE TABLE dbo.Coupon(
+  CouponId BIGINT IDENTITY PRIMARY KEY,
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  Code NVARCHAR(40) NOT NULL,
+  [Name] NVARCHAR(200) NOT NULL,
+  [Type] NVARCHAR(30) NOT NULL,      -- ORDER_PERCENT/ORDER_AMOUNT/ITEM_PERCENT/BUY_X_GET_Y
+  [Value] DECIMAL(18,4) NOT NULL,
+  MinOrderAmount DECIMAL(18,2) NULL,
+  StartAt DATETIME2 NOT NULL,
+  EndAt DATETIME2 NOT NULL,
+  MaxRedemptions INT NULL,
+  PerCustomerLimit INT NULL,
+  IsActive BIT NOT NULL DEFAULT(1),
+  CONSTRAINT UX_Coupon UNIQUE(ShopId, Code)
+);
+
+IF OBJECT_ID(N'dbo.CouponProduct', N'U') IS NULL
+CREATE TABLE dbo.CouponProduct(
+  CouponId BIGINT NOT NULL REFERENCES dbo.Coupon(CouponId) ON DELETE CASCADE,
+  VariantId BIGINT NOT NULL REFERENCES dbo.ProductVariant(VariantId),
+  CONSTRAINT PK_CouponProduct PRIMARY KEY(CouponId, VariantId)
+);
+
+IF OBJECT_ID(N'dbo.CouponRedemption', N'U') IS NULL
+CREATE TABLE dbo.CouponRedemption(
+  RedemptionId BIGINT IDENTITY PRIMARY KEY,
+  CouponId BIGINT NOT NULL REFERENCES dbo.Coupon(CouponId),
+  OrderId BIGINT NULL, -- set sau khi apply
+  CustomerId BIGINT NULL REFERENCES dbo.Customer(CustomerId),
+  RedeemedAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME()
+);
+
+-------------------------------------------------------------
+-- 8) Order + Lines + Serial bán ra + Payment
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.OrderStatus', N'U') IS NULL
+CREATE TABLE dbo.OrderStatus(
+  StatusCode NVARCHAR(30) PRIMARY KEY,
+  [Rank] INT NOT NULL
+);
+
+IF OBJECT_ID(N'dbo.[Order]', N'U') IS NULL
+CREATE TABLE dbo.[Order](
+  OrderId BIGINT IDENTITY PRIMARY KEY,
+  ShopId BIGINT NOT NULL REFERENCES dbo.Shop(ShopId),
+  BranchId BIGINT NOT NULL REFERENCES dbo.Branch(BranchId),
+  OrderNo NVARCHAR(30) NOT NULL UNIQUE,
+  CustomerId BIGINT NULL REFERENCES dbo.Customer(CustomerId),
+  OrderDate DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+  [Status] NVARCHAR(30) NOT NULL REFERENCES dbo.OrderStatus(StatusCode),
+  SubTotal DECIMAL(18,2) NOT NULL DEFAULT(0),
+  Discount DECIMAL(18,2) NOT NULL DEFAULT(0),
+  ShippingFee DECIMAL(18,2) NOT NULL DEFAULT(0),
+  Tax DECIMAL(18,2) NOT NULL DEFAULT(0),
+  TotalAmount AS (SubTotal - Discount + ShippingFee + Tax) PERSISTED,
+  Note NVARCHAR(1000) NULL,
+  SalesUserId NVARCHAR(450) NULL REFERENCES dbo.AspNetUsers(Id),
+  RowVersion ROWVERSION
+);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Order_Date' AND object_id=OBJECT_ID('dbo.[Order]'))
+  CREATE INDEX IX_Order_Date ON dbo.[Order](OrderDate DESC) INCLUDE(Status, TotalAmount, SalesUserId, ShopId, BranchId);
+
+IF OBJECT_ID(N'dbo.OrderLine', N'U') IS NULL
+CREATE TABLE dbo.OrderLine(
+  OrderLineId BIGINT IDENTITY PRIMARY KEY,
+  OrderId BIGINT NOT NULL REFERENCES dbo.[Order](OrderId) ON DELETE CASCADE,
+  VariantId BIGINT NOT NULL REFERENCES dbo.ProductVariant(VariantId),
+  Qty INT NOT NULL CHECK (Qty>0),
+  UnitPrice DECIMAL(18,2) NOT NULL,
+  LineDiscount DECIMAL(18,2) NOT NULL DEFAULT(0),
+  TaxRate DECIMAL(5,2) NULL,
+  Amount AS ((UnitPrice * Qty) - LineDiscount) PERSISTED,
+  RowVersion ROWVERSION,
+  CONSTRAINT UX_OrderLine UNIQUE(OrderId, VariantId)
+);
+
+IF OBJECT_ID(N'dbo.OrderCoupon', N'U') IS NULL
+CREATE TABLE dbo.OrderCoupon(
+  OrderId BIGINT NOT NULL REFERENCES dbo.[Order](OrderId) ON DELETE CASCADE,
+  CouponId BIGINT NOT NULL REFERENCES dbo.Coupon(CouponId),
+  DiscountAmount DECIMAL(18,2) NOT NULL,
+  CONSTRAINT PK_OrderCoupon PRIMARY KEY(OrderId, CouponId)
+);
+
+IF OBJECT_ID(N'dbo.OrderLineSerial', N'U') IS NULL
+CREATE TABLE dbo.OrderLineSerial(
+  OrderLineSerialId BIGINT IDENTITY PRIMARY KEY,
+  OrderLineId BIGINT NOT NULL REFERENCES dbo.OrderLine(OrderLineId) ON DELETE CASCADE,
+  SerialNo NVARCHAR(100) NOT NULL,
+  CONSTRAINT UX_OrderLineSerial UNIQUE(OrderLineId, SerialNo)
+);
+
+IF OBJECT_ID(N'dbo.PaymentMethod', N'U') IS NULL
+CREATE TABLE dbo.PaymentMethod(
+  MethodCode NVARCHAR(30) PRIMARY KEY, -- CASH/CARD/TRANSFER/WALLET/COD
+  [Name] NVARCHAR(100) NOT NULL
+);
+
+IF OBJECT_ID(N'dbo.Payment', N'U') IS NULL
+CREATE TABLE dbo.Payment(
+  PaymentId BIGINT IDENTITY PRIMARY KEY,
+  OrderId BIGINT NOT NULL REFERENCES dbo.[Order](OrderId) ON DELETE CASCADE,
+  MethodCode NVARCHAR(30) NOT NULL REFERENCES dbo.PaymentMethod(MethodCode),
+  PaidAmount DECIMAL(18,2) NOT NULL,
+  PaidAt DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+  RefNo NVARCHAR(100) NULL
+);
+
+-------------------------------------------------------------
+-- 9) ErrorLog (Super Admin xem)
+-------------------------------------------------------------
+IF OBJECT_ID(N'dbo.ErrorLog', N'U') IS NULL
+BEGIN
+  CREATE TABLE dbo.ErrorLog(
+    LogId BIGINT IDENTITY PRIMARY KEY,
+    LogTime DATETIME2 NOT NULL DEFAULT SYSUTCDATETIME(),
+    [Level] NVARCHAR(20) NOT NULL,      -- ERROR/WARN/INFO
+    [Source] NVARCHAR(100) NULL,
+    [Message] NVARCHAR(1000) NOT NULL,
+    [Exception] NVARCHAR(MAX) NULL,
+    UserId NVARCHAR(450) NULL REFERENCES dbo.AspNetUsers(Id),
+    ShopId BIGINT NULL REFERENCES dbo.Shop(ShopId)
+  );
+  CREATE INDEX IX_ErrorLog_Time ON dbo.ErrorLog(LogTime DESC);
+END
+
+-------------------------------------------------------------
+-- 10) SEED từ điển: Roles, Features, RoleFeature, OrderStatus, PaymentMethod
+-------------------------------------------------------------
+DECLARE @ridSuper NVARCHAR(450) = (SELECT Id FROM dbo.AspNetRoles WHERE NormalizedName=N'SUPERADMIN');
+IF @ridSuper IS NULL
+BEGIN
+  SET @ridSuper = NEWID();
+  INSERT INTO dbo.AspNetRoles(Id, Name, NormalizedName, ConcurrencyStamp)
+  VALUES (@ridSuper, N'SuperAdmin', N'SUPERADMIN', NEWID());
+END
+
+DECLARE @ridOwner NVARCHAR(450) = (SELECT Id FROM dbo.AspNetRoles WHERE NormalizedName=N'SHOPOWNER');
+IF @ridOwner IS NULL
+BEGIN
+  SET @ridOwner = NEWID();
+  INSERT INTO dbo.AspNetRoles(Id, Name, NormalizedName, ConcurrencyStamp)
+  VALUES (@ridOwner, N'ShopOwner', N'SHOPOWNER', NEWID());
+END
+
+DECLARE @ridCash NVARCHAR(450) = (SELECT Id FROM dbo.AspNetRoles WHERE NormalizedName=N'CASHIER');
+IF @ridCash IS NULL
+BEGIN
+  SET @ridCash = NEWID();
+  INSERT INTO dbo.AspNetRoles(Id, Name, NormalizedName, ConcurrencyStamp)
+  VALUES (@ridCash, N'Cashier', N'CASHIER', NEWID());
+END
+
+DECLARE @ridSale NVARCHAR(450) = (SELECT Id FROM dbo.AspNetRoles WHERE NormalizedName=N'SALE');
+IF @ridSale IS NULL
+BEGIN
+  SET @ridSale = NEWID();
+  INSERT INTO dbo.AspNetRoles(Id, Name, NormalizedName, ConcurrencyStamp)
+  VALUES (@ridSale, N'Sale', N'SALE', NEWID());
+END
+
+;WITH F(Code,Name) AS (
+    -- Super Admin features
+    SELECT N'PLAN_ADD', N'Add new plan' UNION ALL
+    SELECT N'PLAN_EDIT', N'Edit plan' UNION ALL
+    SELECT N'PLAN_DELETE', N'Delete plan' UNION ALL
+    SELECT N'PLAN_VIEW', N'View plan' UNION ALL
+    SELECT N'REVENUE_VIEW', N'View revenue' UNION ALL
+    SELECT N'PAYMENT_HISTORY_VIEW', N'View payment history' UNION ALL
+    SELECT N'REVENUE_ANALYSIS_VIEW', N'View revenue analysis' UNION ALL
+    SELECT N'ERRORLOG_VIEW', N'View error logs' UNION ALL
+    -- Shop Owner features
+    SELECT N'PRODUCT_ADD', N'Add product' UNION ALL
+    SELECT N'PRODUCT_EDIT', N'Edit product' UNION ALL
+    SELECT N'PRODUCT_DELETE', N'Delete product' UNION ALL
+    SELECT N'PRODUCT_VIEW', N'View product' UNION ALL
+    SELECT N'EMPLOYEE_ADD', N'Add employee' UNION ALL
+    SELECT N'EMPLOYEE_EDIT', N'Edit employee' UNION ALL
+    SELECT N'EMPLOYEE_DELETE', N'Delete employee' UNION ALL
+    SELECT N'EMPLOYEE_VIEW', N'View employee' UNION ALL
+    SELECT N'STORE_ADD', N'Add store/branch' UNION ALL
+    SELECT N'STORE_EDIT', N'Edit store/branch' UNION ALL
+    SELECT N'STORE_DELETE', N'Delete store/branch' UNION ALL
+    SELECT N'STORE_VIEW', N'View store/branch' UNION ALL
+    SELECT N'CUSTOMER_ADD', N'Add customer' UNION ALL
+    SELECT N'CUSTOMER_EDIT', N'Edit customer' UNION ALL
+    SELECT N'CUSTOMER_DELETE', N'Delete customer' UNION ALL
+    SELECT N'CUSTOMER_VIEW', N'View customer' UNION ALL
+    SELECT N'COUPON_ADD', N'Add coupon' UNION ALL
+    SELECT N'COUPON_EDIT', N'Edit coupon' UNION ALL
+    SELECT N'COUPON_DELETE', N'Delete coupon' UNION ALL
+    SELECT N'COUPON_VIEW', N'View coupon' UNION ALL
+    -- Cashier features
+    SELECT N'ORDER_ADD', N'Add order' UNION ALL
+    SELECT N'ORDER_EDIT', N'Edit order' UNION ALL
+    SELECT N'ORDER_DELETE', N'Delete order' UNION ALL
+    SELECT N'ORDER_VIEW', N'View order' UNION ALL
+    SELECT N'PAYMENT_TAKE', N'Take payment' UNION ALL
+    -- Sale features
+    SELECT N'PRODUCT_DETAIL_VIEW', N'View product detail' UNION ALL
+    SELECT N'PROFILE_EDIT', N'Edit profile' UNION ALL
+    SELECT N'PERSONAL_SALES_VIEW', N'View personal sales'
+)
+INSERT INTO dbo.Feature(Code, [Name])
+SELECT f.Code, f.[Name]
+FROM F f
+WHERE NOT EXISTS (SELECT 1 FROM dbo.Feature x WHERE x.Code=f.Code);
+
+INSERT INTO dbo.RoleFeature(RoleId, FeatureId, IsEnabled)
+SELECT @ridSuper, f.Id, 1 FROM dbo.Feature f
+WHERE f.Code IN (N'PLAN_ADD',N'PLAN_EDIT',N'PLAN_DELETE',N'PLAN_VIEW',
+                 N'REVENUE_VIEW',N'PAYMENT_HISTORY_VIEW',N'REVENUE_ANALYSIS_VIEW',N'ERRORLOG_VIEW')
+  AND NOT EXISTS (SELECT 1 FROM dbo.RoleFeature rf WHERE rf.RoleId=@ridSuper AND rf.FeatureId=f.Id);
+
+INSERT INTO dbo.RoleFeature(RoleId, FeatureId, IsEnabled)
+SELECT @ridOwner, f.Id, 1 FROM dbo.Feature f
+WHERE f.Code IN (N'PRODUCT_ADD',N'PRODUCT_EDIT',N'PRODUCT_DELETE',N'PRODUCT_VIEW',
+                 N'EMPLOYEE_ADD',N'EMPLOYEE_EDIT',N'EMPLOYEE_DELETE',N'EMPLOYEE_VIEW',
+                 N'STORE_ADD',N'STORE_EDIT',N'STORE_DELETE',N'STORE_VIEW',
+                 N'CUSTOMER_ADD',N'CUSTOMER_EDIT',N'CUSTOMER_DELETE',N'CUSTOMER_VIEW',
+                 N'COUPON_ADD',N'COUPON_EDIT',N'COUPON_DELETE',N'COUPON_VIEW',
+                 N'REVENUE_VIEW',N'REVENUE_ANALYSIS_VIEW')
+  AND NOT EXISTS (SELECT 1 FROM dbo.RoleFeature rf WHERE rf.RoleId=@ridOwner AND rf.FeatureId=f.Id);
+
+INSERT INTO dbo.RoleFeature(RoleId, FeatureId, IsEnabled)
+SELECT @ridCash, f.Id, 1 FROM dbo.Feature f
+WHERE f.Code IN (N'ORDER_ADD',N'ORDER_EDIT',N'ORDER_DELETE',N'ORDER_VIEW',N'PAYMENT_TAKE',N'CUSTOMER_VIEW')
+  AND NOT EXISTS (SELECT 1 FROM dbo.RoleFeature rf WHERE rf.RoleId=@ridCash AND rf.FeatureId=f.Id);
+
+INSERT INTO dbo.RoleFeature(RoleId, FeatureId, IsEnabled)
+SELECT @ridSale, f.Id, 1 FROM dbo.Feature f
+WHERE f.Code IN (N'PRODUCT_VIEW',N'PRODUCT_DETAIL_VIEW',N'PROFILE_EDIT',N'PERSONAL_SALES_VIEW',N'ORDER_ADD')
+  AND NOT EXISTS (SELECT 1 FROM dbo.RoleFeature rf WHERE rf.RoleId=@ridSale AND rf.FeatureId=f.Id);
+
+-- OrderStatus
+IF NOT EXISTS (SELECT 1 FROM dbo.OrderStatus)
+INSERT INTO dbo.OrderStatus(StatusCode,[Rank]) VALUES
+ (N'DRAFT',1),(N'CONFIRMED',2),(N'PACKED',3),(N'SHIPPED',4),
+ (N'DELIVERED',5),(N'CANCELLED',99),(N'RETURNED',98);
+
+-- PaymentMethod
+IF NOT EXISTS (SELECT 1 FROM dbo.PaymentMethod WHERE MethodCode=N'CASH')
+INSERT INTO dbo.PaymentMethod(MethodCode,[Name]) VALUES (N'CASH',N'Tiền mặt');
+IF NOT EXISTS (SELECT 1 FROM dbo.PaymentMethod WHERE MethodCode=N'CARD')
+INSERT INTO dbo.PaymentMethod(MethodCode,[Name]) VALUES (N'CARD',N'Thẻ');
+IF NOT EXISTS (SELECT 1 FROM dbo.PaymentMethod WHERE MethodCode=N'TRANSFER')
+INSERT INTO dbo.PaymentMethod(MethodCode,[Name]) VALUES (N'TRANSFER',N'Chuyển khoản');
+IF NOT EXISTS (SELECT 1 FROM dbo.PaymentMethod WHERE MethodCode=N'WALLET')
+INSERT INTO dbo.PaymentMethod(MethodCode,[Name]) VALUES (N'WALLET',N'Ví điện tử');
+IF NOT EXISTS (SELECT 1 FROM dbo.PaymentMethod WHERE MethodCode=N'COD')
+INSERT INTO dbo.PaymentMethod(MethodCode,[Name]) VALUES (N'COD',N'Thu hộ (COD)');
+
+-------------------------------------------------------------
+-- 11) SCHEMA rpt + Views báo cáo
+-------------------------------------------------------------
+IF SCHEMA_ID(N'rpt') IS NULL EXEC('CREATE SCHEMA rpt');
+
+IF OBJECT_ID(N'rpt.RevenueDaily', N'V') IS NOT NULL DROP VIEW rpt.RevenueDaily;
+GO
+CREATE VIEW rpt.RevenueDaily AS
+SELECT
+  o.ShopId, o.BranchId, CONVERT(date,o.OrderDate) AS SaleDate,
+  COUNT(DISTINCT o.OrderId) AS Orders,
+  SUM(o.SubTotal - o.Discount) AS NetSales,
+  SUM(ol.Qty * (ol.UnitPrice - ISNULL(ol.LineDiscount/NULLIF(ol.Qty,0),0))) AS GrossSales
+FROM dbo.[Order] o
+JOIN dbo.OrderLine ol ON ol.OrderId=o.OrderId
+WHERE o.[Status]=N'DELIVERED'
+GROUP BY o.ShopId, o.BranchId, CONVERT(date,o.OrderDate);
+GO
+
+IF OBJECT_ID(N'rpt.PaymentHistory', N'V') IS NOT NULL DROP VIEW rpt.PaymentHistory;
+GO
+CREATE VIEW rpt.PaymentHistory AS
+SELECT p.PaymentId, p.OrderId, o.OrderNo, p.MethodCode, p.PaidAmount, p.PaidAt,
+       o.ShopId, o.BranchId, o.CustomerId
+FROM dbo.Payment p
+JOIN dbo.[Order] o ON o.OrderId=p.OrderId;
+GO
+
+IF OBJECT_ID(N'rpt.PersonalSales', N'V') IS NOT NULL DROP VIEW rpt.PersonalSales;
+GO
+CREATE VIEW rpt.PersonalSales AS
+SELECT o.SalesUserId AS UserId,
+       CONVERT(date, o.OrderDate) AS SaleDate,
+       COUNT(DISTINCT o.OrderId) AS Orders,
+       SUM(o.SubTotal - o.Discount) AS NetSales
+FROM dbo.[Order] o
+WHERE o.[Status]=N'DELIVERED' AND o.SalesUserId IS NOT NULL
+GROUP BY o.SalesUserId, CONVERT(date,o.OrderDate);
+GO
+
+-- View hỗ trợ nạp claims "feature"
+IF OBJECT_ID(N'dbo.vw_UserEffectiveFeatures', N'V') IS NOT NULL DROP VIEW dbo.vw_UserEffectiveFeatures;
+GO
+CREATE VIEW dbo.vw_UserEffectiveFeatures AS
+SELECT ur.UserId, rf.FeatureId, f.Code AS FeatureCode, rf.IsEnabled
+FROM dbo.AspNetUserRoles ur
+JOIN dbo.RoleFeature rf ON rf.RoleId = ur.RoleId
+JOIN dbo.Feature f ON f.Id = rf.FeatureId
+WHERE rf.IsEnabled = 1;
+GO
+
+-------------------------------------------------------------
+-- 12) Index khuyến nghị
+-------------------------------------------------------------
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Inventory_Key' AND object_id=OBJECT_ID('dbo.Inventory'))
+  CREATE INDEX IX_Inventory_Key ON dbo.Inventory(ShopId, BranchId, VariantId);
+
+IF NOT EXISTS (SELECT 1 FROM sys.indexes WHERE name='IX_Customer_Search' AND object_id=OBJECT_ID('dbo.Customer'))
+  CREATE INDEX IX_Customer_Search ON dbo.Customer(ShopId, Phone, Email);
+
+COMMIT;
+PRINT N'✅ DDL đã tạo xong: Identity + Features + Domain + Views + Seeds.';
