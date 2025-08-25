@@ -1,0 +1,227 @@
+@model ChainStoreSalesManagement.Domain.Entities.ProductCategory
+@{
+    ViewData["Title"] = "Xóa danh mục";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .btn-back {
+        background: none;
+        border: 1px solid #dee2e6;
+        padding: 8px 12px;
+        border-radius: 4px;
+        color: #6c757d;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .btn-back:hover {
+        background: #f8f9fa;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    
+    .delete-container {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        border: 1px solid #e9ecef;
+        max-width: 600px;
+        margin: 0 auto;
+        text-align: center;
+    }
+    
+    .warning-icon {
+        font-size: 64px;
+        color: #dc3545;
+        margin-bottom: 20px;
+    }
+    
+    .delete-title {
+        font-size: 20px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 15px;
+    }
+    
+    .delete-message {
+        color: #6c757d;
+        margin-bottom: 20px;
+        line-height: 1.5;
+    }
+    
+    .category-info {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 6px;
+        margin: 20px 0;
+        text-align: left;
+    }
+    
+    .info-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+    }
+    
+    .info-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .info-label {
+        font-weight: 500;
+        color: #333;
+    }
+    
+    .info-value {
+        color: #6c757d;
+    }
+    
+    .warning-message {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        color: #856404;
+        padding: 15px;
+        border-radius: 6px;
+        margin: 20px 0;
+    }
+    
+    .form-actions {
+        display: flex;
+        justify-content: center;
+        gap: 15px;
+        margin-top: 30px;
+    }
+    
+    .btn-cancel {
+        background: none;
+        border: 1px solid #dee2e6;
+        padding: 10px 20px;
+        border-radius: 4px;
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .btn-cancel:hover {
+        background: #f8f9fa;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .btn-delete:hover {
+        background: #c82333;
+    }
+    
+    .btn-delete:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <a href="@Url.Action("Index")" class="btn-back">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="page-title">Xóa danh mục</h1>
+</div>
+
+<div class="delete-container">
+    <div class="warning-icon">
+        <i class="fas fa-exclamation-triangle"></i>
+    </div>
+    
+    <h2 class="delete-title">Bạn có chắc chắn muốn xóa danh mục này?</h2>
+    
+    <div class="delete-message">
+        Hành động này không thể hoàn tác. Danh mục sẽ bị xóa vĩnh viễn khỏi hệ thống.
+    </div>
+    
+    <div class="category-info">
+        <div class="info-row">
+            <span class="info-label">Tên danh mục:</span>
+            <span class="info-value">@Model.Name</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Mô tả:</span>
+            <span class="info-value">@(Model.Description ?? "Không có mô tả")</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Ngày tạo:</span>
+            <span class="info-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Trạng thái:</span>
+            <span class="info-value">
+                @if (Model.IsActive)
+                {
+                    <span class="badge bg-success">Hoạt động</span>
+                }
+                else
+                {
+                    <span class="badge bg-secondary">Ngừng hoạt động</span>
+                }
+            </span>
+        </div>
+    </div>
+    
+    @if (!ViewBag.CanDelete)
+    {
+        <div class="warning-message">
+            <i class="fas fa-exclamation-circle"></i>
+            <strong>Không thể xóa danh mục này!</strong>
+            <br>Có @ViewBag.ProductCount sản phẩm đang sử dụng danh mục này. Vui lòng xóa hoặc chuyển các sản phẩm sang danh mục khác trước khi xóa.
+        </div>
+    }
+    
+    <div class="form-actions">
+        <a href="@Url.Action("Index")" class="btn-cancel">Hủy</a>
+        @if (ViewBag.CanDelete)
+        {
+            <form asp-action="Delete" method="post" style="display: inline;">
+                <input type="hidden" asp-for="CategoryId" />
+                <button type="submit" class="btn-delete" 
+                        onclick="return confirm('Bạn có chắc chắn muốn xóa danh mục này không?')">
+                    <i class="fas fa-trash"></i>
+                    Xóa danh mục
+                </button>
+            </form>
+        }
+        else
+        {
+            <button type="button" class="btn-delete" disabled>
+                <i class="fas fa-ban"></i>
+                Không thể xóa
+            </button>
+        }
+    </div>
+</div>

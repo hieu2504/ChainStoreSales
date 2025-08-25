@@ -1,0 +1,428 @@
+@model IEnumerable<ChainStoreSalesManagement.Domain.Entities.ProductCategory>
+@{
+    ViewData["Title"] = "Danh mục sản phẩm";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<style>
+    .page-header {
+        padding: 0;
+        margin-bottom: 20px;
+    }
+    
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    
+    .tabs-container {
+        border-bottom: 1px solid #e9ecef;
+        margin-bottom: 20px;
+    }
+    
+    .nav-tabs {
+        border-bottom: none;
+    }
+    
+    .nav-tabs .nav-link {
+        border: none;
+        color: #666;
+        padding: 12px 0;
+        margin-right: 30px;
+        background: transparent;
+        border-bottom: 2px solid transparent;
+    }
+    
+    .nav-tabs .nav-link.active {
+        color: #007bff;
+        border-bottom: 2px solid #007bff;
+        background: transparent;
+    }
+    
+    .search-section {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .search-row {
+        display: flex;
+        gap: 15px;
+        align-items: center;
+    }
+    
+    .search-input {
+        flex: 1;
+        max-width: 300px;
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .filter-select {
+        min-width: 150px;
+        padding: 8px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 14px;
+    }
+    
+    .btn-search {
+        padding: 8px 16px;
+        background: #007bff;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
+    
+    .btn-add {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        text-decoration: none;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        float: right;
+        margin-bottom: 20px;
+    }
+    
+    .btn-add:hover {
+        background: #0056b3;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .table-container {
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        border: 1px solid #e9ecef;
+    }
+    
+    .table {
+        margin: 0;
+    }
+    
+    .table thead th {
+        background: #f8f9fa;
+        border: none;
+        color: #495057;
+        font-weight: 600;
+        padding: 15px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .table tbody td {
+        padding: 15px;
+        vertical-align: middle;
+        border-bottom: 1px solid #f1f3f4;
+    }
+    
+    .table tbody tr:hover {
+        background-color: #f8f9fa;
+    }
+    
+    .category-icon {
+        width: 40px;
+        height: 40px;
+        background: #f1f3f4;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+        font-size: 16px;
+    }
+    
+    .category-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+    }
+    
+    .category-name {
+        font-weight: 500;
+        color: #333;
+        margin: 0;
+        font-size: 14px;
+    }
+    
+    .product-count {
+        text-align: center;
+        font-weight: 500;
+    }
+    
+    .conditions {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .pagination-info {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
+    .pagination {
+        margin: 0;
+    }
+    
+    .page-link {
+        color: #007bff;
+        border: 1px solid #dee2e6;
+        padding: 6px 12px;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .empty-state {
+        text-align: center;
+        padding: 60px 20px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .empty-icon {
+        font-size: 64px;
+        color: #e9ecef;
+        margin-bottom: 20px;
+    }
+    
+    .empty-title {
+        font-size: 18px;
+        font-weight: 600;
+        color: #333;
+        margin-bottom: 8px;
+    }
+    
+    .empty-text {
+        color: #6c757d;
+        margin-bottom: 20px;
+    }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <h1 class="page-title">Danh mục sản phẩm</h1>
+        <a href="@Url.Action("Create")" class="btn-add">
+            <i class="fas fa-plus"></i>
+            Thêm danh mục
+        </a>
+    </div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs-container">
+    <ul class="nav nav-tabs">
+        <li class="nav-item">
+            <a class="nav-link active" href="#">Tất cả</a>
+        </li>
+    </ul>
+</div>
+
+<!-- Search Section -->
+<div class="search-section">
+    <form method="get" class="search-row">
+        <input type="text" name="searchTerm" 
+               value="@(ViewBag.CurrentSearchTerm ?? "")" 
+               placeholder="Tìm kiếm danh mục sản phẩm"
+               class="search-input">
+        
+        @* <select name="categoryType" class="filter-select">
+            <option value="">Loại danh mục</option>
+            <option value="parent">Danh mục cha</option>
+            <option value="child">Danh mục con</option>
+        </select>
+        
+        <select name="channel" class="filter-select">
+            <option value="">Kênh bán hàng</option>
+            <option value="online">Online</option>
+            <option value="offline">Offline</option>
+        </select>
+        
+        <select name="saveFilter" class="filter-select">
+            <option value="">Lưu bộ lọc</option>
+        </select> *@
+        
+        <button type="submit" class="btn-search">
+            <i class="fas fa-search"></i>
+        </button>
+    </form>
+</div>
+
+<!-- Alerts -->
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i>@TempData["SuccessMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i>@TempData["ErrorMessage"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+}
+
+<!-- Content -->
+@if (Model != null && Model.Any())
+{
+    <div class="table-container">
+        <table class="table">
+            <thead>
+                <tr>
+                    <th><input type="checkbox" class="form-check-input"></th>
+                    <th>Danh mục</th>
+                    <th>Số lượng</th>
+                    <th>Điều kiện áp dụng</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var category in Model)
+                {
+                    <tr>
+                        <td>
+                            <input type="checkbox" class="form-check-input" value="@category.CategoryId">
+                        </td>
+                        <td>
+                            <div class="category-info">
+                                <div class="category-icon">
+                                    @if (!string.IsNullOrEmpty(category.ImagePath))
+                                    {
+                                        <img src="@category.ImagePath" alt="@category.Name" style="width: 40px; height: 40px; object-fit: cover; border-radius: 4px;" />
+                                    }
+                                    else
+                                    {
+                                        <i class="fas fa-folder"></i>
+                                    }
+                                </div>
+                                <div>
+                                    <div class="category-name">
+                                        <a href="@Url.Action("Edit", new { id = category.CategoryId })" style="text-decoration: none; color: inherit;">
+                                            @category.Name
+                                        </a>
+                                    </div>
+                                </div>
+                            </div>
+                        </td>
+                        <td class="product-count">0</td>
+                        <td class="conditions">—</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+        
+        <!-- Pagination -->
+        <div class="pagination-container">
+            <div class="pagination-info">
+                Từ @ViewBag.StartItem đến @ViewBag.EndItem trên @ViewBag.TotalCount
+            </div>
+            
+            @if (ViewBag.TotalPages > 1)
+            {
+                <nav>
+                    <ul class="pagination">
+                        <li class="page-item @(ViewBag.HasPrevious ? "" : "disabled")">
+                            <a class="page-link" href="@Url.Action("Index", new { searchTerm = ViewBag.CurrentSearchTerm, page = ViewBag.CurrentPage - 1 })">
+                                Trước
+                            </a>
+                        </li>
+                        
+                        @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                        {
+                            <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                <a class="page-link" href="@Url.Action("Index", new { searchTerm = ViewBag.CurrentSearchTerm, page = i })">@i</a>
+                            </li>
+                        }
+                        
+                        <li class="page-item @(ViewBag.HasNext ? "" : "disabled")">
+                            <a class="page-link" href="@Url.Action("Index", new { searchTerm = ViewBag.CurrentSearchTerm, page = ViewBag.CurrentPage + 1 })">
+                                Sau
+                            </a>
+                        </li>
+                    </ul>
+                </nav>
+            }
+            
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <span>Hiển thị</span>
+                <select class="form-select" style="width: auto; display: inline-block;">
+                    <option value="8" selected>8</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
+                <span>Kết quả</span>
+            </div>
+        </div>
+    </div>
+}
+else
+{
+    <!-- Empty State -->
+    <div class="empty-state">
+        <div class="empty-icon">
+            <i class="fas fa-folder-open"></i>
+        </div>
+        <div class="empty-title">Cửa hàng của bạn chưa có danh mục nào</div>
+        <div class="empty-text">
+            Thêm mới hoặc nhập danh sách danh mục của bạn.
+            <br>Bạn có thể tải file mẫu <a href="#">tại đây</a>
+        </div>
+        <div style="display: flex; gap: 15px; justify-content: center;">
+            <a href="@Url.Action("Create")" class="btn btn-primary">
+                <i class="fas fa-plus"></i>
+                Thêm danh mục
+            </a>
+            <a href="#" class="btn btn-outline-primary">
+                <i class="fas fa-upload"></i>
+                Nhập file danh mục
+            </a>
+        </div>
+        <div style="margin-top: 15px;">
+            <small class="text-muted">Tìm hiểu thêm về <a href="#">danh mục sản phẩm</a></small>
+        </div>
+    </div>
+}
+
+<script>
+// Handle page size change
+document.addEventListener('DOMContentLoaded', function() {
+    const pageSizeSelect = document.querySelector('.pagination-container select');
+    if (pageSizeSelect) {
+        pageSizeSelect.addEventListener('change', function() {
+            const currentUrl = new URL(window.location);
+            currentUrl.searchParams.set('pageSize', this.value);
+            currentUrl.searchParams.set('page', '1');
+            window.location.href = currentUrl.toString();
+        });
+    }
+});
+</script>

@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
-using ChainStoreSalesManagement.Data;
-using ChainStoreSalesManagement.Models;
+using ChainStoreSalesManagement.Infrastructure.Persistence;
+using ChainStoreSalesManagement.Domain.Entities;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -9,9 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
-builder.Services.AddIdentity<ApplicationUser, IdentityRole>()
-    .AddEntityFrameworkStores<ApplicationDbContext>()
-    .AddDefaultTokenProviders();
+builder.Services.AddDefaultIdentity<ApplicationUser>()
+    .AddRoles<IdentityRole>()
+    .AddEntityFrameworkStores<ApplicationDbContext>();
 
 builder.Services.AddControllersWithViews();
 

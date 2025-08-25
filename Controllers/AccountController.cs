@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using ChainStoreSalesManagement.Models;
+using ChainStoreSalesManagement.Domain.Entities;
 using ChainStoreSalesManagement.ViewModels;
 
 namespace ChainStoreSalesManagement.Controllers
@@ -39,7 +39,7 @@ namespace ChainStoreSalesManagement.Controllers
                 }
                 else
                 {
-                    ModelState.AddModelError(string.Empty, "Invalid login attempt.");
+                    ModelState.AddModelError(string.Empty, "Email/số điện thoại hoặc mật khẩu không chính xác.");
                     return View(model);
                 }
             }
@@ -81,7 +81,7 @@ namespace ChainStoreSalesManagement.Controllers
         public async Task<IActionResult> Logout()
         {
             await _signInManager.SignOutAsync();
-            return RedirectToAction(nameof(HomeController.Index), "Home");
+            return RedirectToAction(nameof(Login), "Account");
         }
 
         private IActionResult RedirectToLocal(string? returnUrl)

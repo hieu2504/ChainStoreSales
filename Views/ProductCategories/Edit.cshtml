@@ -1,0 +1,447 @@
+@model ChainStoreSalesManagement.Domain.Entities.ProductCategory
+@{
+    ViewData["Title"] = "Sửa danh mục";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<style>
+    .page-header {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        margin-bottom: 20px;
+    }
+    
+    .btn-back {
+        background: none;
+        border: 1px solid #dee2e6;
+        padding: 8px 12px;
+        border-radius: 4px;
+        color: #6c757d;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 40px;
+        height: 40px;
+    }
+    
+    .btn-back:hover {
+        background: #f8f9fa;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    
+    .page-title {
+        font-size: 24px;
+        font-weight: 600;
+        color: #333;
+        margin: 0;
+    }
+    
+    .form-container {
+        display: flex;
+        gap: 20px;
+    }
+    
+    .form-main {
+        flex: 1;
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .form-sidebar {
+        width: 320px;
+        display: flex;
+        flex-direction: column;
+        gap: 20px;
+    }
+    
+    .sidebar-card {
+        background: white;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+    }
+    
+    .sidebar-header {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .form-section {
+        margin-bottom: 25px;
+    }
+    
+    .section-title {
+        font-size: 16px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        color: #333;
+    }
+    
+    .form-group {
+        margin-bottom: 20px;
+    }
+    
+    .form-label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #333;
+        font-size: 14px;
+    }
+    
+    .required {
+        color: #dc3545;
+    }
+    
+    .form-control {
+        width: 100%;
+        padding: 10px 12px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        font-size: 14px;
+        transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+    }
+    
+    .form-control:focus {
+        border-color: #007bff;
+        outline: 0;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+    
+    .form-actions {
+        position: fixed;
+        bottom: 0;
+        right: 0;
+        left: 250px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+        padding: 15px 20px;
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        z-index: 1000;
+    }
+    
+    .btn-cancel {
+        background: none;
+        border: 1px solid #dee2e6;
+        padding: 10px 20px;
+        border-radius: 4px;
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 14px;
+    }
+    
+    .btn-cancel:hover {
+        background: #f8f9fa;
+        color: #6c757d;
+        text-decoration: none;
+    }
+    
+    .btn-save {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        font-size: 14px;
+        cursor: pointer;
+    }
+    
+    .btn-save:hover {
+        background: #0056b3;
+    }
+    
+    .image-upload {
+        border: 2px dashed #dee2e6;
+        border-radius: 8px;
+        padding: 30px 20px;
+        text-align: center;
+        cursor: pointer;
+        transition: border-color 0.3s ease;
+    }
+    
+    .image-upload:hover {
+        border-color: #007bff;
+    }
+    
+    .upload-icon {
+        font-size: 24px;
+        color: #6c757d;
+        margin-bottom: 12px;
+    }
+    
+    .upload-text {
+        color: #333;
+        margin-bottom: 8px;
+    }
+    
+    .current-image {
+        text-align: center;
+        margin-bottom: 15px;
+    }
+    
+    .current-image img {
+        max-width: 100%;
+        height: 150px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #dee2e6;
+    }
+    
+    .image-actions {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 10px;
+    }
+    
+    .btn-change, .btn-remove {
+        padding: 6px 12px;
+        border-radius: 4px;
+        font-size: 12px;
+        text-decoration: none;
+        cursor: pointer;
+    }
+    
+    .btn-change {
+        background: #007bff;
+        color: white;
+        border: none;
+    }
+    
+    .btn-remove {
+        background: #dc3545;
+        color: white;
+        border: none;
+    }
+    
+    .rich-editor { 
+        border: 1px solid #dee2e6; 
+        border-radius: 6px; 
+        min-height: 120px; 
+        background: white; 
+    }
+    
+    .editor-toolbar { 
+        padding: 8px 12px; 
+        border-bottom: 1px solid #dee2e6; 
+        background: #f8f9fa; 
+        display: flex; 
+        gap: 8px; 
+    }
+    
+    .editor-btn { 
+        background: none; 
+        border: none; 
+        color: #6c757d; 
+        cursor: pointer; 
+    }
+    
+    .editor-content { 
+        padding: 16px; 
+        min-height: 80px; 
+        outline: none; 
+        font-size: 14px; 
+        line-height: 1.5; 
+    }
+    
+    .editor-footer { 
+        padding: 8px 16px; 
+        font-size: 12px; 
+        color: #6c757d; 
+        text-align: right; 
+        border-top: 1px solid #dee2e6; 
+        background: #f8f9fa; 
+    }
+</style>
+
+<!-- Header -->
+<div class="page-header">
+    <a href="@Url.Action("Index")" class="btn-back">
+        <i class="fas fa-arrow-left"></i>
+    </a>
+    <h1 class="page-title">Sửa danh mục</h1>
+</div>
+
+<form asp-action="Edit" method="post" enctype="multipart/form-data">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display: none;"></div>
+    <input type="hidden" asp-for="CategoryId" />
+    <input type="hidden" asp-for="CreatedAt" />
+    
+    <div class="form-container">
+        <!-- Main Form -->
+        <div class="form-main">
+            <!-- Thông tin danh mục -->
+            <div class="form-section">
+                <h3 class="section-title">Thông tin danh mục</h3>                
+                <div class="form-group">
+                    <label asp-for="Name" class="form-label">Tên danh mục <span class="required">*</span></label>
+                    <input asp-for="Name" class="form-control" placeholder="Nhập tên danh mục" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Mô tả</label>
+                    <div class="rich-editor">
+                        <div class="editor-toolbar">
+                            <button type="button" class="editor-btn"><i class="fas fa-bold"></i></button>
+                            <button type="button" class="editor-btn"><i class="fas fa-italic"></i></button>
+                            <button type="button" class="editor-btn"><i class="fas fa-underline"></i></button>
+                        </div>
+                        <div class="editor-content" contenteditable="true">@Html.Raw(Model.Description)</div>
+                        <div class="editor-footer">HTML: @(Model.Description?.Length ?? 0)/30000 <i class="fas fa-info-circle"></i></div>
+                    </div>
+                    <textarea asp-for="Description" style="display:none;">@Model.Description</textarea>
+                    <span asp-validation-for="Description" class="text-danger"></span>
+                </div>
+                
+                <div class="form-group">
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" asp-for="IsActive" id="IsActive">
+                        <label class="form-check-label" for="IsActive">
+                            Kích hoạt
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar -->
+        <div class="form-sidebar">
+            <!-- Image Card -->
+            <div class="sidebar-card">
+                <h3 class="sidebar-header">Ảnh danh mục</h3>
+                
+                @if (!string.IsNullOrEmpty(Model.ImagePath))
+                {
+                    <div class="current-image">
+                        <img src="@Model.ImagePath" alt="Current image" />
+                        <div class="image-actions">
+                            <button type="button" class="btn-change" onclick="document.getElementById('categoryImageInput').click();">
+                                Thay đổi
+                            </button>
+                            <button type="button" class="btn-remove" onclick="removeCurrentImage()">
+                                Xóa
+                            </button>
+                        </div>
+                    </div>
+                }
+                else
+                {
+                    <div class="image-upload" onclick="document.getElementById('categoryImageInput').click();">
+                        <div class="upload-icon"><i class="fas fa-plus"></i></div>
+                        <div class="upload-text">Kéo thả hoặc click để chọn ảnh</div>
+                        <small class="text-muted">Hỗ trợ: JPG, PNG, GIF (Max: 5MB)</small>
+                    </div>
+                }
+                
+                <input type="file" id="categoryImageInput" name="categoryImage" accept="image/*" style="display: none;" onchange="previewImage(this)" />
+                <input type="hidden" id="removeImageFlag" name="removeImage" value="false" />
+                
+                <div id="imagePreview" style="margin-top: 10px; display: none;">
+                    <img id="previewImg" src="#" alt="Preview" style="max-width: 100%; height: 150px; object-fit: cover; border-radius: 4px;" />
+                    <div class="image-actions">
+                        <button type="button" class="btn-remove" onclick="removePreviewImage()">Xóa ảnh mới</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Status Card -->
+            <div class="sidebar-card">
+                <h3 class="sidebar-header">Trạng thái</h3>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" asp-for="IsActive" id="IsActiveSidebar">
+                    <label class="form-check-label" for="IsActiveSidebar">
+                        Hoạt động
+                    </label>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Form Actions -->
+    <div class="form-actions">
+        <a href="@Url.Action("Index")" class="btn-cancel">Hủy</a>
+        <button type="submit" class="btn-save">Cập nhật</button>
+    </div>
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const editorContent = document.querySelector('.editor-content');
+            const descriptionInput = document.querySelector('textarea[name="Description"]');
+            if (editorContent && descriptionInput) {
+                editorContent.addEventListener('input', function() {
+                    descriptionInput.value = this.innerHTML;
+                    const footer = document.querySelector('.editor-footer');
+                    footer.innerHTML = `HTML: ${this.textContent.length}/30000 <i class="fas fa-info-circle"></i>`;
+                });
+                
+                // Initialize the hidden textarea with current content
+                descriptionInput.value = editorContent.innerHTML;
+            }
+        });
+
+        function previewImage(input) {
+            const file = input.files[0];
+            if (file) {
+                // Validate file size (5MB max)
+                if (file.size > 5 * 1024 * 1024) {
+                    alert('Kích thước file quá lớn. Vui lòng chọn file nhỏ hơn 5MB.');
+                    input.value = '';
+                    return;
+                }
+
+                // Validate file type
+                if (!file.type.startsWith('image/')) {
+                    alert('Vui lòng chọn file hình ảnh.');
+                    input.value = '';
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    document.getElementById('previewImg').src = e.target.result;
+                    document.getElementById('imagePreview').style.display = 'block';
+                    
+                    // Hide current image or upload area
+                    const currentImage = document.querySelector('.current-image');
+                    const imageUpload = document.querySelector('.image-upload');
+                    if (currentImage) currentImage.style.display = 'none';
+                    if (imageUpload) imageUpload.style.display = 'none';
+                }
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function removePreviewImage() {
+            document.getElementById('categoryImageInput').value = '';
+            document.getElementById('imagePreview').style.display = 'none';
+            
+            // Show current image or upload area
+            const currentImage = document.querySelector('.current-image');
+            const imageUpload = document.querySelector('.image-upload');
+            if (currentImage) {
+                currentImage.style.display = 'block';
+            } else if (imageUpload) {
+                imageUpload.style.display = 'block';
+            }
+        }
+
+        function removeCurrentImage() {
+            document.getElementById('removeImageFlag').value = 'true';
+            document.querySelector('.current-image').style.display = 'none';
+            document.querySelector('.image-upload').style.display = 'block';
+        }
+    </script>
+}

@@ -1,5 +1,5 @@
 using Microsoft.AspNetCore.Identity;
-using ChainStoreSalesManagement.Models;
+using ChainStoreSalesManagement.Domain.Entities;
 
 namespace ChainStoreSalesManagement.Data
 {
