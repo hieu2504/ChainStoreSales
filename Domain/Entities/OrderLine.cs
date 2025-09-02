@@ -9,7 +9,7 @@ namespace ChainStoreSalesManagement.Domain.Entities
         
         public long OrderId { get; set; }
         
-        public long VariantId { get; set; }
+        public long ProductId { get; set; }
         
         public int Qty { get; set; } // > 0
         
@@ -30,7 +30,7 @@ namespace ChainStoreSalesManagement.Domain.Entities
 
         // Navigation properties
         public Order Order { get; set; } = null!;
-        public ProductVariant ProductVariant { get; set; } = null!;
+        public Product Product { get; set; } = null!;
         public ICollection<OrderLineSerial> OrderLineSerials { get; set; } = new List<OrderLineSerial>();
     }
 }

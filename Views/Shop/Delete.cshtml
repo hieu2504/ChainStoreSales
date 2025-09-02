@@ -1,0 +1,220 @@
+@model ChainStoreSalesManagement.Domain.Entities.Shop
+@{
+    ViewData["Title"] = "Xóa cửa hàng";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<style>
+    .page-container {
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+    }
+    
+    .delete-card {
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        overflow: hidden;
+    }
+    
+    .delete-header {
+        background: #dc3545;
+        color: white;
+        padding: 20px;
+        text-align: center;
+    }
+    
+    .delete-icon {
+        font-size: 48px;
+        margin-bottom: 16px;
+    }
+    
+    .delete-title {
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .delete-body {
+        padding: 30px;
+    }
+    
+    .warning-message {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 6px;
+        padding: 16px;
+        margin-bottom: 24px;
+        color: #856404;
+    }
+    
+    .shop-details {
+        background: #f8f9fa;
+        border-radius: 6px;
+        padding: 20px;
+        margin-bottom: 24px;
+    }
+    
+    .detail-row {
+        display: flex;
+        margin-bottom: 12px;
+        align-items: center;
+    }
+    
+    .detail-row:last-child {
+        margin-bottom: 0;
+    }
+    
+    .detail-label {
+        font-weight: 600;
+        width: 140px;
+        color: #333;
+    }
+    
+    .detail-value {
+        color: #666;
+        flex: 1;
+    }
+    
+    .status-badge {
+        padding: 4px 8px;
+        border-radius: 4px;
+        font-size: 12px;
+        font-weight: 500;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .shop-code {
+        font-family: 'Courier New', monospace;
+        background: #e9ecef;
+        padding: 2px 6px;
+        border-radius: 3px;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    
+    .action-buttons {
+        display: flex;
+        gap: 12px;
+        justify-content: center;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .btn-danger-confirm {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    
+    .btn-danger-confirm:hover {
+        background: #c82333;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+        color: white;
+        text-decoration: none;
+    }
+</style>
+
+<div class="page-container">
+    <div class="delete-card">
+        <div class="delete-header">
+            <div class="delete-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+            </div>
+            <h1 class="delete-title">Xác nhận xóa cửa hàng</h1>
+        </div>
+        
+        <div class="delete-body">
+            <div class="warning-message">
+                <i class="fas fa-exclamation-circle"></i>
+                <strong>Cảnh báo:</strong> Hành động này không thể hoàn tác. Cửa hàng và tất cả dữ liệu liên quan sẽ bị xóa vĩnh viễn.
+            </div>
+            
+            <div class="shop-details">
+                <h4 style="margin-bottom: 16px; color: #333;">Thông tin cửa hàng sẽ bị xóa:</h4>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Mã cửa hàng:</span>
+                    <span class="detail-value">
+                        <span class="shop-code">@Model.Code</span>
+                    </span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Tên cửa hàng:</span>
+                    <span class="detail-value">@Model.Name</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Địa chỉ:</span>
+                    <span class="detail-value">@(Model.Address ?? "Chưa có địa chỉ")</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Người quản lý:</span>
+                    <span class="detail-value">@(Model.OwnerUser?.UserName ?? "Chưa phân công")</span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Trạng thái:</span>
+                    <span class="detail-value">
+                        <span class="status-badge @(Model.IsActive ? "status-active" : "status-inactive")">
+                            @(Model.IsActive ? "Hoạt động" : "Không hoạt động")
+                        </span>
+                    </span>
+                </div>
+                
+                <div class="detail-row">
+                    <span class="detail-label">Ngày tạo:</span>
+                    <span class="detail-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+                </div>
+            </div>
+            
+            <form asp-action="Delete" method="post">
+                <input type="hidden" asp-for="ShopId" />
+                <div class="action-buttons">
+                    <button type="submit" class="btn-danger-confirm">
+                        <i class="fas fa-trash"></i>
+                        Xác nhận xóa
+                    </button>
+                    <a href="@Url.Action("Index")" class="btn-secondary">
+                        <i class="fas fa-times"></i>
+                        Hủy bỏ
+                    </a>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

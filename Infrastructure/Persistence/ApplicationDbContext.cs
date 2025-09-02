@@ -18,7 +18,6 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
         public DbSet<ProductCategory> ProductCategories { get; set; } = null!;
         public DbSet<Brand> Brands { get; set; } = null!;
         public DbSet<Product> Products { get; set; } = null!;
-        public DbSet<ProductVariant> ProductVariants { get; set; } = null!;
         public DbSet<ProductImage> ProductImages { get; set; } = null!;
         public DbSet<Inventory> Inventories { get; set; } = null!;
         public DbSet<InventorySerial> InventorySerials { get; set; } = null!;
@@ -90,22 +89,16 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
                 entity.HasIndex(e => new { e.ShopId, e.Code })
                     .IsUnique()
                     .HasFilter("[Code] IS NOT NULL");
-                entity.Property(e => e.RowVersion).IsRowVersion();
-            });
-
-            // ProductVariant
-            modelBuilder.Entity<ProductVariant>(entity =>
-            {
-                entity.HasIndex(e => new { e.ProductId, e.Sku }).IsUnique();
-                entity.HasIndex(e => e.Sku)
-                    .IncludeProperties(e => new { e.ProductId, e.TrackSerial });
+                entity.HasIndex(e => e.Barcode)
+                    .IsUnique()
+                    .HasFilter("[Barcode] IS NOT NULL");
                 entity.Property(e => e.RowVersion).IsRowVersion();
             });
 
             // InventorySerial
             modelBuilder.Entity<InventorySerial>(entity =>
             {
-                entity.HasIndex(e => new { e.ShopId, e.BranchId, e.VariantId, e.SerialNo }).IsUnique();
+                entity.HasIndex(e => new { e.ShopId, e.BranchId, e.ProductId, e.SerialNo }).IsUnique();
                 
                 entity.HasOne(e => e.Shop)
                     .WithMany(s => s.InventorySerials)
@@ -117,9 +110,9 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
                     .HasForeignKey(e => e.BranchId)
                     .OnDelete(DeleteBehavior.NoAction);
                     
-                entity.HasOne(e => e.ProductVariant)
-                    .WithMany(v => v.InventorySerials)
-                    .HasForeignKey(e => e.VariantId)
+                entity.HasOne(e => e.Product)
+                    .WithMany(p => p.InventorySerials)
+                    .HasForeignKey(e => e.ProductId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
@@ -168,8 +161,8 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
             // Inventory (Composite Key)
             modelBuilder.Entity<Inventory>(entity =>
             {
-                entity.HasKey(e => new { e.ShopId, e.BranchId, e.VariantId });
-                entity.HasIndex(e => new { e.ShopId, e.BranchId, e.VariantId });
+                entity.HasKey(e => new { e.ShopId, e.BranchId, e.ProductId });
+                entity.HasIndex(e => new { e.ShopId, e.BranchId, e.ProductId });
                 
                 entity.HasOne(e => e.Shop)
                     .WithMany(s => s.Inventories)
@@ -181,23 +174,23 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
                     .HasForeignKey(e => e.BranchId)
                     .OnDelete(DeleteBehavior.NoAction);
                     
-                entity.HasOne(e => e.ProductVariant)
-                    .WithMany(v => v.Inventories)
-                    .HasForeignKey(e => e.VariantId)
+                entity.HasOne(e => e.Product)
+                    .WithMany(p => p.Inventories)
+                    .HasForeignKey(e => e.ProductId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
             // CouponProduct (Composite Key)
             modelBuilder.Entity<CouponProduct>(entity =>
             {
-                entity.HasKey(e => new { e.CouponId, e.VariantId });
+                entity.HasKey(e => new { e.CouponId, e.ProductId });
                 entity.HasOne(e => e.Coupon)
                     .WithMany(c => c.CouponProducts)
                     .HasForeignKey(e => e.CouponId)
                     .OnDelete(DeleteBehavior.Cascade);
-                entity.HasOne(e => e.ProductVariant)
-                    .WithMany(v => v.CouponProducts)
-                    .HasForeignKey(e => e.VariantId)
+                entity.HasOne(e => e.Product)
+                    .WithMany(p => p.CouponProducts)
+                    .HasForeignKey(e => e.ProductId)
                     .OnDelete(DeleteBehavior.NoAction);
             });
 
@@ -248,7 +241,7 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
             // OrderLine
             modelBuilder.Entity<OrderLine>(entity =>
             {
-                entity.HasIndex(e => new { e.OrderId, e.VariantId }).IsUnique();
+                entity.HasIndex(e => new { e.OrderId, e.ProductId }).IsUnique();
                 
                 entity.Property(e => e.Amount)
                     .HasComputedColumnSql("((UnitPrice * Qty) - LineDiscount)", stored: true);
@@ -260,6 +253,11 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
                     .WithMany(o => o.OrderLines)
                     .HasForeignKey(e => e.OrderId)
                     .OnDelete(DeleteBehavior.Cascade);
+                    
+                entity.HasOne(e => e.Product)
+                    .WithMany(p => p.OrderLines)
+                    .HasForeignKey(e => e.ProductId)
+                    .OnDelete(DeleteBehavior.NoAction);
             });
 
             // OrderLineSerial
@@ -309,7 +307,7 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
             // CouponProduct (junction table)
             modelBuilder.Entity<CouponProduct>(entity =>
             {
-                entity.HasKey(e => new { e.CouponId, e.VariantId });
+                entity.HasKey(e => new { e.CouponId, e.ProductId });
             });
 
             // OrderCoupon (junction table)
@@ -342,8 +340,7 @@ namespace ChainStoreSalesManagement.Infrastructure.Persistence
             modelBuilder.Entity<ProductCategory>(entity => entity.HasKey(e => e.CategoryId));
             modelBuilder.Entity<Brand>(entity => entity.HasKey(e => e.BrandId));
             modelBuilder.Entity<Product>(entity => entity.HasKey(e => e.ProductId));
-            modelBuilder.Entity<ProductVariant>(entity => entity.HasKey(e => e.VariantId));
-            modelBuilder.Entity<Inventory>(entity => entity.HasKey(e => new { e.ShopId, e.BranchId, e.VariantId }));
+            modelBuilder.Entity<Inventory>(entity => entity.HasKey(e => new { e.ShopId, e.BranchId, e.ProductId }));
             modelBuilder.Entity<Employee>(entity => entity.HasKey(e => e.EmployeeId));
             modelBuilder.Entity<Customer>(entity => entity.HasKey(e => e.CustomerId));
             modelBuilder.Entity<Coupon>(entity => entity.HasKey(e => e.CouponId));

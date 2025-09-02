@@ -1,0 +1,141 @@
+@model ChainStoreSalesManagement.Domain.Entities.Brand
+@{
+    ViewData["Title"] = "Thêm thương hiệu";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<style>
+    /* === Styles giữ lại bản hoàn chỉnh === */
+    .page-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .breadcrumb-nav {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 8px;
+        color: #6c757d;
+        font-size: 14px;
+    }
+    .breadcrumb-nav a { color: #007bff; text-decoration: none; }
+
+    .page-title { font-size: 24px; font-weight: 600; color: #333; margin: 0; }
+    .action-buttons { display: flex; gap: 12px; align-items: center; }
+
+    .btn-cancel {
+        background: white;
+        color: #6c757d;
+        border: 1px solid #dee2e6;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+    }
+    .btn-cancel:hover { background: #f8f9fa; }
+
+    .btn-save {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+    }
+    .btn-save:hover { background: #0056b3; }
+
+    .content-layout { display: flex; gap: 20px; align-items: flex-start; }
+    .main-form { flex: 1; background: white; border-radius: 8px; border: 1px solid #e9ecef; padding: 20px; }
+    .sidebar-form { width: 300px; display: flex; flex-direction: column; gap: 20px; }
+    .sidebar-card { background: white; border-radius: 8px; border: 1px solid #e9ecef; padding: 20px; }
+
+    .form-section { margin-bottom: 30px; }
+    .form-section:last-child { margin-bottom: 0; }
+    .section-title { font-size: 16px; font-weight: 600; color: #333; margin-bottom: 16px; }
+
+    .form-group { margin-bottom: 20px; }
+    .form-label { font-size: 14px; font-weight: 600; margin-bottom: 8px; display: block; }
+    .required { color: #dc3545; }
+
+    .form-control {
+        width: 100%;
+        padding: 12px 16px;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        font-size: 14px;
+    }
+    .form-control:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+
+    .rich-editor { border: 1px solid #dee2e6; border-radius: 6px; min-height: 120px; background: white; }
+    .editor-toolbar { padding: 8px 12px; border-bottom: 1px solid #dee2e6; background: #f8f9fa; display: flex; gap: 8px; }
+    .editor-btn { background: none; border: none; color: #6c757d; cursor: pointer; }
+    .editor-content { padding: 16px; min-height: 80px; outline: none; font-size: 14px; line-height: 1.5; }
+    .editor-footer { padding: 8px 16px; font-size: 12px; color: #6c757d; text-align: right; border-top: 1px solid #dee2e6; background: #f8f9fa; }
+
+    .image-upload { border: 2px dashed #dee2e6; border-radius: 8px; padding: 30px 20px; text-align: center; cursor: pointer; }
+    .upload-icon { font-size: 24px; color: #6c757d; margin-bottom: 12px; }
+    .upload-link { color: #007bff; text-decoration: none; font-size: 14px; }
+</style>
+</style>
+
+<!-- Breadcrumb -->
+<div class="breadcrumb-nav">
+    <a href="/"><i class="fas fa-home"></i></a>
+    <span>/</span>
+    <a href="@Url.Action("Index")">Thương hiệu</a>
+    <span>/</span>
+    <span>Thêm thương hiệu</span>
+</div>
+
+<!-- Header -->
+<div class="page-header">
+    <h1 class="page-title">Thêm thương hiệu</h1>
+    <div class="action-buttons">
+        <a href="@Url.Action("Index")" class="btn-cancel">Hủy</a>
+        <button type="submit" form="createForm" class="btn-save">Thêm thương hiệu</button>
+    </div>
+</div>
+
+<form id="createForm" asp-action="Create" method="post">
+    <div asp-validation-summary="ModelOnly" class="alert alert-danger d-none"></div>
+    
+    <div class="content-layout">
+        <!-- Main Form -->
+        <div class="main-form">
+            <!-- Thông tin thương hiệu -->
+            <div class="form-section">
+                <h2 class="section-title">Thông tin thương hiệu</h2>
+                <div class="form-group">
+                    <label asp-for="ShopId" class="form-label">Cửa hàng <span class="required">*</span></label>
+                    <select asp-for="ShopId" class="form-control" asp-items="ViewBag.ShopId">
+                        <option value="">Chọn cửa hàng</option>
+                    </select>
+                    <span asp-validation-for="ShopId" class="text-danger"></span>
+                </div>
+                <div class="form-group">
+                    <label asp-for="Name" class="form-label">Tên thương hiệu <span class="required">*</span></label>
+                    <input asp-for="Name" class="form-control" placeholder="Nhập tên thương hiệu" />
+                    <span asp-validation-for="Name" class="text-danger"></span>
+                </div>
+            </div>
+        </div>
+    </div>
+</form>
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}
+

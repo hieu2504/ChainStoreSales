@@ -384,17 +384,20 @@
             <span>Vận chuyển</span>
         </a>
         
-        <div class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProductCategories" ? "expanded" : "")" onclick="toggleSubmenu(this)">
+        <div class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProductCategories" || ViewContext.RouteData.Values["controller"]?.ToString() == "Brands" || ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "expanded" : "")" onclick="toggleSubmenu(this)">
             <i class="fas fa-box"></i>
             <span>Sản phẩm</span>
             <i class="fas fa-chevron-right expand-icon"></i>
         </div>
-        <div class="submenu @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProductCategories" ? "open" : "")">
-            <a href="#" class="submenu-item">
+        <div class="submenu @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProductCategories" || ViewContext.RouteData.Values["controller"]?.ToString() == "Brands" || ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "open" : "")">
+            <a href="@Url.Action("Index", "Products")" class="submenu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Products" ? "active" : "")">
                 <span>Danh sách sản phẩm</span>
             </a>
             <a href="@Url.Action("Index", "ProductCategories")" class="submenu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "ProductCategories" ? "active" : "")">
                 <span>Danh mục sản phẩm</span>
+            </a>
+            <a href="@Url.Action("Index", "Brands")" class="submenu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Brands" ? "active" : "")">
+                <span>Thương hiệu</span>
             </a>
             <a href="#" class="submenu-item">
                 <span>Bảng giá</span>
@@ -431,6 +434,13 @@
         <a href="#" class="menu-item">
             <i class="fas fa-cash-register"></i>
             <span>POS</span>
+        </a>
+        
+        <div class="menu-section">Quản lý hệ thống</div>
+        
+        <a href="@Url.Action("Index", "Shop")" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Shop" ? "active" : "")">
+            <i class="fas fa-store"></i>
+            <span>Cửa hàng</span>
         </a>
         
         <div class="menu-section">Ứng dụng</div>

@@ -1,0 +1,347 @@
+@model ChainStoreSalesManagement.Domain.Entities.Product
+
+@{
+    ViewData["Title"] = "Chi tiết sản phẩm";
+}
+
+<style>
+    .page-header {
+        background: white;
+        border-bottom: 1px solid #e9ecef;
+        padding: 20px;
+        margin-bottom: 0;
+    }
+    
+    .page-title {
+        color: #2c3e50;
+        font-size: 24px;
+        font-weight: 600;
+        margin: 0;
+    }
+    
+    .detail-container {
+        background: white;
+        padding: 30px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        margin: 20px;
+    }
+    
+    .product-header {
+        display: flex;
+        gap: 30px;
+        margin-bottom: 30px;
+        padding-bottom: 20px;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .product-images {
+        flex: 0 0 300px;
+    }
+    
+    .main-image {
+        width: 100%;
+        height: 300px;
+        object-fit: cover;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        margin-bottom: 10px;
+    }
+    
+    .thumbnail-images {
+        display: flex;
+        gap: 5px;
+    }
+    
+    .thumbnail {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 4px;
+        border: 1px solid #e9ecef;
+        cursor: pointer;
+        transition: border-color 0.2s;
+    }
+    
+    .thumbnail:hover {
+        border-color: #007bff;
+    }
+    
+    .product-icon-large {
+        width: 300px;
+        height: 300px;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: white;
+        font-size: 64px;
+    }
+    
+    .product-info {
+        flex: 1;
+    }
+    
+    .product-name {
+        font-size: 28px;
+        font-weight: 600;
+        color: #2c3e50;
+        margin-bottom: 10px;
+    }
+    
+    .product-code {
+        color: #6c757d;
+        font-size: 16px;
+        margin-bottom: 15px;
+    }
+    
+    .status-badge {
+        padding: 6px 12px;
+        border-radius: 15px;
+        font-size: 14px;
+        font-weight: 500;
+        margin-bottom: 20px;
+        display: inline-block;
+    }
+    
+    .status-active {
+        background: #d4edda;
+        color: #155724;
+    }
+    
+    .status-inactive {
+        background: #f8d7da;
+        color: #721c24;
+    }
+    
+    .info-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+        gap: 30px;
+        margin-top: 30px;
+    }
+    
+    .info-section {
+        background: #f8f9fa;
+        padding: 20px;
+        border-radius: 8px;
+    }
+    
+    .info-section h5 {
+        color: #495057;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .info-item {
+        display: flex;
+        justify-content: space-between;
+        padding: 8px 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .info-item:last-child {
+        border-bottom: none;
+    }
+    
+    .info-label {
+        font-weight: 500;
+        color: #6c757d;
+    }
+    
+    .info-value {
+        color: #495057;
+        text-align: right;
+    }
+    
+    .description-section {
+        margin-top: 30px;
+        padding-top: 20px;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .description-section h5 {
+        color: #495057;
+        font-size: 18px;
+        font-weight: 600;
+        margin-bottom: 15px;
+    }
+    
+    .description-text {
+        color: #6c757d;
+        line-height: 1.6;
+        white-space: pre-line;
+    }
+    
+    .btn-primary {
+        background: #007bff;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+    }
+    
+    .btn-primary:hover {
+        background: #0056b3;
+        text-decoration: none;
+        color: white;
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 14px;
+        cursor: pointer;
+        transition: background-color 0.2s;
+        margin-left: 10px;
+    }
+    
+    .btn-secondary:hover {
+        background: #545b62;
+        text-decoration: none;
+        color: white;
+    }
+</style>
+
+<!-- Page Header -->
+<div class="page-header">
+    <h1 class="page-title">@ViewData["Title"]</h1>
+</div>
+
+<div class="detail-container">
+    <div class="product-header">
+        <div class="product-images">
+            @if (Model.Images != null && Model.Images.Any())
+            {
+                <img src="@Model.Images.First().FilePath" alt="@Model.Name" class="main-image" id="mainImage" />
+                
+                @if (Model.Images.Count() > 1)
+                {
+                    <div class="thumbnail-images">
+                        @foreach (var image in Model.Images)
+                        {
+                            <img src="@image.FilePath" alt="@Model.Name" class="thumbnail" onclick="changeMainImage('@image.FilePath')" />
+                        }
+                    </div>
+                }
+            }
+            else
+            {
+                <div class="product-icon-large">
+                    <i class="fas fa-box"></i>
+                </div>
+            }
+        </div>
+        
+        <div class="product-info">
+            <h1 class="product-name">@Model.Name</h1>
+            
+            @if (!string.IsNullOrEmpty(Model.Code))
+            {
+                <div class="product-code">Mã: @Model.Code</div>
+            }
+            
+            <span class="status-badge @(Model.CanSell ? "status-active" : "status-inactive")">
+                @(Model.CanSell ? "Có thể bán" : "Không thể bán")
+            </span>
+            
+            <div style="margin-top: 30px;">
+                <a asp-action="Edit" asp-route-id="@Model.ProductId" class="btn-primary">
+                    <i class="fas fa-edit"></i>
+                    Chỉnh sửa
+                </a>
+                <a asp-action="Index" class="btn-secondary">
+                    <i class="fas fa-arrow-left"></i>
+                    Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+    
+    <div class="info-grid">
+        <div class="info-section">
+            <h5>Thông tin cơ bản</h5>
+            
+            <div class="info-item">
+                <span class="info-label">Cửa hàng</span>
+                <span class="info-value">@(Model.Shop?.Name ?? "Không xác định")</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Danh mục</span>
+                <span class="info-value">@(Model.Category?.Name ?? "Chưa phân loại")</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Thương hiệu</span>
+                <span class="info-value">@(Model.Brand?.Name ?? "Chưa có")</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Đơn vị tính</span>
+                <span class="info-value">@Model.Unit</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Trạng thái bán</span>
+                <span class="info-value">@(Model.CanSell ? "Có thể bán" : "Không thể bán")</span>
+            </div>
+        </div>
+        
+        <div class="info-section">
+            <h5>Thông tin hệ thống</h5>
+            
+            <div class="info-item">
+                <span class="info-label">Ngày tạo</span>
+                <span class="info-value">@Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Cập nhật lần cuối</span>
+                <span class="info-value">@(Model.ModifiedAt?.ToString("dd/MM/yyyy HH:mm") ?? "Chưa cập nhật")</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Trạng thái</span>
+                <span class="info-value">@(Model.IsDeleted ? "Đã xóa" : "Hoạt động")</span>
+            </div>
+            
+            <div class="info-item">
+                <span class="info-label">Số hình ảnh</span>
+                <span class="info-value">@(Model.Images?.Count ?? 0) ảnh</span>
+            </div>
+        </div>
+    </div>
+    
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <div class="description-section">
+            <h5>Mô tả sản phẩm</h5>
+            <div class="description-text">@Model.Description</div>
+        </div>
+    }
+</div>
+
+<script>
+    function changeMainImage(imagePath) {
+        document.getElementById('mainImage').src = imagePath;
+    }
+</script>

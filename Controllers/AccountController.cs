@@ -84,6 +84,12 @@ namespace ChainStoreSalesManagement.Controllers
             return RedirectToAction(nameof(Login), "Account");
         }
 
+        // GET: AccessDenied
+        public IActionResult AccessDenied()
+        {
+            return View();
+        }
+
         private IActionResult RedirectToLocal(string? returnUrl)
         {
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))

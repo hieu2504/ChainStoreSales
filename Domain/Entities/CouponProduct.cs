@@ -4,10 +4,10 @@ namespace ChainStoreSalesManagement.Domain.Entities
     {
         public long CouponId { get; set; }
         
-        public long VariantId { get; set; }
+        public long ProductId { get; set; }
 
         // Navigation properties
         public Coupon Coupon { get; set; } = null!;
-        public ProductVariant ProductVariant { get; set; } = null!;
+        public Product Product { get; set; } = null!;
     }
 }

@@ -10,7 +10,7 @@ namespace ChainStoreSalesManagement.Domain.Entities
         
         public long BranchId { get; set; }
         
-        public long VariantId { get; set; }
+        public long ProductId { get; set; }
         
         [Required]
         [StringLength(100)]
@@ -22,6 +22,6 @@ namespace ChainStoreSalesManagement.Domain.Entities
         // Navigation properties
         public Shop Shop { get; set; } = null!;
         public Branch Branch { get; set; } = null!;
-        public ProductVariant ProductVariant { get; set; } = null!;
+        public Product Product { get; set; } = null!;
     }
 }

@@ -7,29 +7,13 @@
 <style>
     .page-header {
         display: flex;
+        justify-content: space-between;
         align-items: center;
-        gap: 15px;
         margin-bottom: 20px;
-    }
-    
-    .btn-back {
-        background: none;
-        border: 1px solid #dee2e6;
-        padding: 8px 12px;
-        border-radius: 4px;
-        color: #6c757d;
-        text-decoration: none;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 40px;
-        height: 40px;
-    }
-    
-    .btn-back:hover {
-        background: #f8f9fa;
-        color: #6c757d;
-        text-decoration: none;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
     }
     
     .page-title {
@@ -130,13 +114,14 @@
     }
     
     .btn-cancel {
-        background: none;
-        border: 1px solid #dee2e6;
-        padding: 10px 20px;
-        border-radius: 4px;
+        background: white;
         color: #6c757d;
+        border: 1px solid #dee2e6;
+        padding: 12px 24px;
+        border-radius: 6px;
         text-decoration: none;
         font-size: 14px;
+        font-weight: 500;
     }
     
     .btn-cancel:hover {
@@ -149,15 +134,38 @@
         background: #007bff;
         color: white;
         border: none;
-        padding: 10px 20px;
-        border-radius: 4px;
+        padding: 12px 24px;
+        border-radius: 6px;
         font-size: 14px;
+        font-weight: 500;
         cursor: pointer;
     }
     
     .btn-save:hover {
         background: #0056b3;
     }
+
+    .btn-delete {
+        background: #dc3545;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        text-decoration: none;
+        font-size: 14px;
+        font-weight: 500;
+        cursor: pointer;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .btn-delete:hover { 
+        background: #c82333; 
+        color: white;
+        text-decoration: none;
+    }
+
+    .action-buttons { display: flex; gap: 12px; align-items: center; }
     
     .image-upload {
         border: 2px dashed #dee2e6;
@@ -265,13 +273,21 @@
 
 <!-- Header -->
 <div class="page-header">
-    <a href="@Url.Action("Index")" class="btn-back">
-        <i class="fas fa-arrow-left"></i>
-    </a>
     <h1 class="page-title">Sửa danh mục</h1>
+    <div class="action-buttons">
+        <form asp-action="Delete" asp-route-id="@Model.CategoryId" method="post" style="display: inline;" onsubmit="return confirm('Bạn có chắc chắn muốn xóa danh mục này không?')">
+            @Html.AntiForgeryToken()
+            <button type="submit" class="btn-delete">
+                <i class="fas fa-trash"></i>
+                Xóa
+            </button>
+        </form>
+        <a href="@Url.Action("Index")" class="btn-cancel">Hủy</a>
+        <button type="submit" form="editForm" class="btn-save">Cập nhật</button>
+    </div>
 </div>
 
-<form asp-action="Edit" method="post" enctype="multipart/form-data">
+<form asp-action="Edit" method="post" enctype="multipart/form-data" id="editForm">
     <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="display: none;"></div>
     <input type="hidden" asp-for="CategoryId" />
     <input type="hidden" asp-for="CreatedAt" />
@@ -355,7 +371,7 @@
             </div>
             
             <!-- Status Card -->
-            <div class="sidebar-card">
+            @* <div class="sidebar-card">
                 <h3 class="sidebar-header">Trạng thái</h3>
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" asp-for="IsActive" id="IsActiveSidebar">
@@ -363,14 +379,8 @@
                         Hoạt động
                     </label>
                 </div>
-            </div>
+            </div> *@
         </div>
-    </div>
-    
-    <!-- Form Actions -->
-    <div class="form-actions">
-        <a href="@Url.Action("Index")" class="btn-cancel">Hủy</a>
-        <button type="submit" class="btn-save">Cập nhật</button>
     </div>
 </form>
 
