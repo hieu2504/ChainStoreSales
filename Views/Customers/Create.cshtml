@@ -1,0 +1,267 @@
+@model ChainStoreSalesManagement.Domain.Entities.Customer
+
+@{
+    ViewData["Title"] = "Thêm khách hàng";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<div class="container-fluid" style="max-width: 1080px; margin: 0 auto;">
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="mb-0">
+                    <i class="fas fa-user-plus me-2"></i>
+                    Thêm khách hàng
+                </h2>
+                <p class="text-muted mb-0">Tạo thông tin khách hàng mới</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <a asp-action="Index" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <form asp-action="Create" method="post" class="needs-validation" novalidate>
+        <div class="row">
+            <!-- Left Panel - Customer Information -->
+            <div class="col-lg-8">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Thông tin khách hàng
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Code" class="form-label">Mã khách hàng</label>
+                                <input asp-for="Code" class="form-control" readonly style="background-color: #f8f9fa;" />
+                                <div class="form-text">Mã được tự động tạo</div>
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ShopId" class="form-label">
+                                    Cửa hàng <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="ShopId" class="form-select" required>
+                                    <option value="">-- Chọn cửa hàng --</option>
+                                    @foreach (var shop in ViewBag.Shops)
+                                    {
+                                        <option value="@shop.ShopId">@shop.Name</option>
+                                    }
+                                </select>
+                                <span asp-validation-for="ShopId" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-8 mb-3">
+                                <label asp-for="FullName" class="form-label">
+                                    Họ tên <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="FullName" class="form-control" required maxlength="200" />
+                                <span asp-validation-for="FullName" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-4 mb-3">
+                                <label asp-for="Gender" class="form-label">Giới tính</label>
+                                <select asp-for="Gender" class="form-select">
+                                    <option value="">-- Chọn --</option>
+                                    <option value="1">Nam</option>
+                                    <option value="0">Nữ</option>
+                                    <option value="2">Khác</option>
+                                </select>
+                                <span asp-validation-for="Gender" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Phone" class="form-label">Số điện thoại</label>
+                                <input asp-for="Phone" class="form-control" type="tel" maxlength="30" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Email" class="form-label">Email</label>
+                                <input asp-for="Email" class="form-control" type="email" maxlength="200" />
+                                <span asp-validation-for="Email" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TaxCode" class="form-label">Mã số thuế</label>
+                                <input asp-for="TaxCode" class="form-control" maxlength="50" />
+                                <div class="form-text">Dành cho khách hàng doanh nghiệp</div>
+                                <span asp-validation-for="TaxCode" class="text-danger"></span>
+                            </div>
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="BirthDate" class="form-label">Ngày sinh</label>
+                                <input asp-for="BirthDate" class="form-control" type="date" />
+                                <span asp-validation-for="BirthDate" class="text-danger"></span>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Address" class="form-label">Địa chỉ</label>
+                            <textarea asp-for="Address" class="form-control" rows="2" maxlength="500" 
+                                      placeholder="Nhập địa chỉ khách hàng"></textarea>
+                            <span asp-validation-for="Address" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Note" class="form-label">Ghi chú</label>
+                            <textarea asp-for="Note" class="form-control" rows="3" maxlength="1000" 
+                                      placeholder="Ghi chú thêm về khách hàng"></textarea>
+                            <span asp-validation-for="Note" class="text-danger"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Panel - Additional Info -->
+            <div class="col-lg-4">
+                <div class="card mb-4">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-cog me-2"></i>
+                            Thông tin bổ sung
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="mb-3">
+                            <label class="form-label">Loại khách hàng</label>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="customerType" id="individual" checked>
+                                <label class="form-check-label" for="individual">
+                                    Cá nhân
+                                </label>
+                            </div>
+                            <div class="form-check">
+                                <input class="form-check-input" type="radio" name="customerType" id="business">
+                                <label class="form-check-label" for="business">
+                                    Doanh nghiệp
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            <strong>Lưu ý:</strong>
+                            <ul class="mb-0 mt-2">
+                                <li>Số điện thoại và email phải duy nhất</li>
+                                <li>Mã khách hàng được tự động tạo theo định dạng CUS-yyMMdd-####</li>
+                                <li>Các trường có dấu (*) là bắt buộc</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="card">
+                    <div class="card-body">
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Tạo khách hàng
+                            </button>
+                            <a asp-action="Index" class="btn btn-outline-secondary">
+                                <i class="fas fa-times me-2"></i>Hủy bỏ
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Customer type logic
+        document.getElementById('business').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('TaxCode').parentElement.style.display = 'block';
+                document.getElementById('TaxCode').required = true;
+            }
+        });
+
+        document.getElementById('individual').addEventListener('change', function() {
+            if (this.checked) {
+                document.getElementById('TaxCode').parentElement.style.display = 'block';
+                document.getElementById('TaxCode').required = false;
+            }
+        });
+
+        // Form validation
+        (function() {
+            'use strict';
+            window.addEventListener('load', function() {
+                var forms = document.getElementsByClassName('needs-validation');
+                var validation = Array.prototype.filter.call(forms, function(form) {
+                    form.addEventListener('submit', function(event) {
+                        if (form.checkValidity() === false) {
+                            event.preventDefault();
+                            event.stopPropagation();
+                        }
+                        form.classList.add('was-validated');
+                    }, false);
+                });
+            }, false);
+        })();
+
+        // Phone number formatting
+        document.getElementById('Phone').addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                if (value.startsWith('0')) {
+                    value = value.substring(0, 11);
+                }
+            }
+            e.target.value = value;
+        });
+    </script>
+}
+
+<style>
+    .card {
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .text-danger {
+        font-size: 0.875rem;
+    }
+    
+    .header-section h2 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .alert-info {
+        font-size: 0.875rem;
+    }
+    
+    .was-validated .form-control:valid {
+        border-color: #28a745;
+    }
+    
+    .was-validated .form-control:invalid {
+        border-color: #dc3545;
+    }
+</style>

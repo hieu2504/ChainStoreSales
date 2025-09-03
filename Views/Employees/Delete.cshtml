@@ -1,0 +1,196 @@
+@model ChainStoreSalesManagement.Domain.Entities.Employee
+
+@{
+    ViewData["Title"] = "Xóa nhân viên";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<div class="container-fluid" style="max-width: 1080px; margin: 0 auto;">
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-0 text-danger">
+                    <i class="fas fa-user-times me-2"></i>
+                    Xóa nhân viên
+                </h2>
+                <p class="text-muted mb-0">Xác nhận xóa nhân viên khỏi hệ thống</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Employee Information -->
+        <div class="col-lg-8">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h6 class="mb-0">Thông tin nhân viên sẽ bị xóa</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Tên đăng nhập:</td>
+                                    <td>@Model.User?.UserName</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Email:</td>
+                                    <td>@Model.User?.Email</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Chức vụ:</td>
+                                    <td>@(Model.Title ?? "-")</td>
+                                </tr>
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold">Chi nhánh:</td>
+                                    <td>@(Model.Branch?.Name ?? "Chưa phân chi nhánh")</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Ngày tuyển dụng:</td>
+                                    <td>@(Model.HiredDate?.ToString("dd/MM/yyyy") ?? "-")</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Trạng thái:</td>
+                                    <td>
+                                        @if (Model.IsActive)
+                                        {
+                                            <span class="badge bg-success">Hoạt động</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Không hoạt động</span>
+                                        }
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Impact Analysis -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Phân tích tác động</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert @(ViewBag.HasSales ? "alert-warning" : "alert-info")">
+                        <h6>
+                            <i class="fas @(ViewBag.HasSales ? "fa-exclamation-triangle" : "fa-info-circle") me-1"></i>
+                            @(ViewBag.HasSales ? "Cảnh báo" : "Thông tin")
+                        </h6>
+                        @if (ViewBag.HasSales)
+                        {
+                            <p class="mb-2">
+                                Nhân viên này có <strong>@ViewBag.SalesCount đơn hàng</strong> trong hệ thống.
+                            </p>
+                            <p class="mb-0">
+                                <strong>Hành động:</strong> Nhân viên sẽ được <strong>vô hiệu hóa</strong> 
+                                thay vì xóa hoàn toàn để bảo toàn dữ liệu.
+                            </p>
+                        }
+                        else
+                        {
+                            <p class="mb-0">
+                                Nhân viên này chưa có dữ liệu bán hàng nào. 
+                                Có thể xóa hoàn toàn khỏi hệ thống.
+                            </p>
+                        }
+                    </div>
+
+                    <div class="mt-3">
+                        <h6>Thống kê:</h6>
+                        <ul class="list-unstyled">
+                            <li><i class="fas fa-shopping-cart text-primary me-2"></i>Đơn hàng: <strong>@ViewBag.SalesCount</strong></li>
+                            <li><i class="fas fa-calendar text-info me-2"></i>Ngày tạo: <strong>@Model.CreatedAt.ToString("dd/MM/yyyy")</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="row mt-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h6 class="mb-1">Xác nhận hành động</h6>
+                            <p class="text-muted mb-0">
+                                @if (ViewBag.HasSales)
+                                {
+                                    <text>Nhân viên sẽ được vô hiệu hóa và không thể đăng nhập vào hệ thống.</text>
+                                }
+                                else
+                                {
+                                    <text>Nhân viên sẽ được xóa hoàn toàn khỏi hệ thống.</text>
+                                }
+                            </p>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <a asp-action="Edit" asp-route-id="@Model.EmployeeId" class="btn btn-outline-secondary">
+                                <i class="fas fa-arrow-left me-1"></i>Quay lại sửa
+                            </a>
+                            <form asp-action="Delete" method="post" class="d-inline">
+                                <input asp-for="EmployeeId" type="hidden" />
+                                <button type="submit" class="btn btn-danger" 
+                                        onclick="return confirm('@(ViewBag.HasSales ? "Bạn có chắc chắn muốn vô hiệu hóa nhân viên này không?" : "Bạn có chắc chắn muốn xóa hoàn toàn nhân viên này không?")')">
+                                    <i class="fas @(ViewBag.HasSales ? "fa-ban" : "fa-trash") me-1"></i>
+                                    @(ViewBag.HasSales ? "Vô hiệu hóa" : "Xóa hoàn toàn")
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Success message display
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                toastr.success('@TempData["SuccessMessage"]');
+            </text>
+        }
+    </script>
+}
+
+<style>
+    .card {
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .header-section h2 {
+        color: #dc3545;
+        font-weight: 600;
+    }
+    
+    .table-borderless td {
+        padding: 0.5rem 0.75rem;
+        border: none;
+    }
+    
+    .table-borderless .fw-bold {
+        width: 40%;
+        color: #495057;
+    }
+</style>

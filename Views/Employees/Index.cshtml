@@ -1,0 +1,337 @@
+@model IEnumerable<ChainStoreSalesManagement.Domain.Entities.Employee>
+
+@{
+    ViewData["Title"] = "Quản lý nhân viên";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<div class="container-fluid" style="max-width: 1080px; margin: 0 auto;">
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="mb-0">
+                    <i class="fas fa-users-cog me-2"></i>
+                    Nhân viên
+                </h2>
+                <p class="text-muted mb-0">Quản lý thông tin nhân viên</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <a asp-action="Create" class="btn btn-primary">
+                    <i class="fas fa-plus me-2"></i>Thêm nhân viên
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Search and Filter Section -->
+    <div class="search-section mb-4">
+        <div class="card">
+            <div class="card-body">
+                <form method="get" class="row g-3">
+                    <div class="col-md-4">
+                        <label class="form-label">Tìm kiếm</label>
+                        <input type="text" name="search" value="@ViewBag.Search" 
+                               class="form-control" 
+                               placeholder="Tên đăng nhập, Email hoặc Chức vụ">
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Chi nhánh</label>
+                        <select name="branchId" class="form-select">
+                            <option value="">Tất cả chi nhánh</option>
+                            @foreach (var branch in ViewBag.Branches as List<ChainStoreSalesManagement.Domain.Entities.Branch>)
+                            {
+                                if (ViewBag.BranchId?.ToString() == branch.BranchId.ToString())
+                                {
+                                    <option value="@branch.BranchId" selected>@branch.Name</option>
+                                }
+                                else
+                                {
+                                    <option value="@branch.BranchId">@branch.Name</option>
+                                }
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label class="form-label">Trạng thái</label>
+                        <select name="isActive" class="form-select">
+                            <option value="">Tất cả</option>
+                            @if (ViewBag.IsActive?.ToString() == "True")
+                            {
+                                <option value="true" selected>Hoạt động</option>
+                                <option value="false">Không hoạt động</option>
+                            }
+                            else if (ViewBag.IsActive?.ToString() == "False")
+                            {
+                                <option value="true">Hoạt động</option>
+                                <option value="false" selected>Không hoạt động</option>
+                            }
+                            else
+                            {
+                                <option value="true">Hoạt động</option>
+                                <option value="false">Không hoạt động</option>
+                            }
+                        </select>
+                    </div>
+                    <div class="col-md-2">
+                        <label class="form-label">&nbsp;</label>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-primary">
+                                <i class="fas fa-search me-1"></i>Tìm
+                            </button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Results Section -->
+    <div class="results-section">
+        <div class="card">
+            <div class="card-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h6 class="mb-0">Danh sách nhân viên (@ViewBag.TotalCount)</h6>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body p-0">
+                @if (Model.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover mb-0">
+                            <thead class="table-light">
+                                <tr>
+                                    <th>Người dùng</th>
+                                    <th>Chức vụ</th>
+                                    <th>Chi nhánh</th>
+                                    <th>Ngày tuyển dụng</th>
+                                    <th>Trạng thái</th>
+                                    <th>Ngày tạo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var employee in Model)
+                                {
+                                    <tr>
+                                        <td>
+                                            <div>
+                                                <a href="@Url.Action("Edit", "Employees", new { id = employee.EmployeeId })" 
+                                                   class="text-decoration-none employee-name-link">
+                                                    <strong class="text-primary">@employee.User?.UserName</strong>
+                                                </a>
+                                            </div>
+                                            @if (!string.IsNullOrEmpty(employee.User?.Email))
+                                            {
+                                                <small class="text-muted d-block">
+                                                    <i class="fas fa-envelope me-1"></i>@employee.User.Email
+                                                </small>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (!string.IsNullOrEmpty(employee.Title))
+                                            {
+                                                <span class="badge bg-info">@employee.Title</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (employee.Branch != null)
+                                            {
+                                                <small>@employee.Branch.Name</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">Chưa phân chi nhánh</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (employee.HiredDate.HasValue)
+                                            {
+                                                <small class="text-muted">@employee.HiredDate.Value.ToString("dd/MM/yyyy")</small>
+                                            }
+                                            else
+                                            {
+                                                <span class="text-muted">-</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            @if (employee.IsActive)
+                                            {
+                                                <span class="badge bg-success">Hoạt động</span>
+                                            }
+                                            else
+                                            {
+                                                <span class="badge bg-secondary">Không hoạt động</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <small class="text-muted">@employee.CreatedAt.ToString("dd/MM/yyyy")</small>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-5">
+                        <i class="fas fa-users-cog fa-3x text-muted mb-3"></i>
+                        <h5 class="text-muted">Không tìm thấy nhân viên nào</h5>
+                        <p class="text-muted">Thử thay đổi bộ lọc hoặc thêm nhân viên mới</p>
+                    </div>
+                }
+            </div>
+            
+            <!-- Pagination -->
+            @if (Model.Any())
+            {
+                <div class="pagination-container">
+                    <div class="pagination-info">
+                        Từ @ViewBag.StartItem đến @ViewBag.EndItem trên @ViewBag.TotalCount
+                    </div>
+                    
+                    @if (ViewBag.TotalPages > 1)
+                    {
+                        <nav>
+                            <ul class="pagination">
+                                <li class="page-item @(ViewBag.HasPrevious ? "" : "disabled")">
+                                    <a class="page-link" href="@Url.Action("Index", new { search = ViewBag.Search, branchId = ViewBag.BranchId, isActive = ViewBag.IsActive, page = ViewBag.CurrentPage - 1, pageSize = ViewBag.PageSize })">
+                                        Trước
+                                    </a>
+                                </li>
+                                
+                                @for (int i = 1; i <= ViewBag.TotalPages; i++)
+                                {
+                                    <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
+                                        <a class="page-link" href="@Url.Action("Index", new { search = ViewBag.Search, branchId = ViewBag.BranchId, isActive = ViewBag.IsActive, page = i, pageSize = ViewBag.PageSize })">@i</a>
+                                    </li>
+                                }
+                                
+                                <li class="page-item @(ViewBag.HasNext ? "" : "disabled")">
+                                    <a class="page-link" href="@Url.Action("Index", new { search = ViewBag.Search, branchId = ViewBag.BranchId, isActive = ViewBag.IsActive, page = ViewBag.CurrentPage + 1, pageSize = ViewBag.PageSize })">
+                                        Sau
+                                    </a>
+                                </li>
+                            </ul>
+                        </nav>
+                    }
+                    
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span>Hiển thị</span>
+                        <select class="form-select" style="width: auto; display: inline-block;" onchange="changePageSize(this.value)">
+                            @{
+                                var currentPageSize = ViewBag.PageSize != null ? (int)ViewBag.PageSize : 20;
+                                var options = new[] { 10, 20, 50 };
+                            }
+                            @foreach (var option in options)
+                            {
+                                if (option == currentPageSize)
+                                {
+                                    <option value="@option" selected>@option</option>
+                                }
+                                else
+                                {
+                                    <option value="@option">@option</option>
+                                }
+                            }
+                        </select>
+                        <span>Kết quả</span>
+                    </div>
+                </div>
+            }
+        </div>
+
+        @if (!Model.Any())
+        {
+            <div class="text-center py-5">
+                <i class="fas fa-users-cog fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Không tìm thấy nhân viên nào</h5>
+                <p class="text-muted">Thử thay đổi bộ lọc hoặc thêm nhân viên mới</p>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        // Change page size function
+        function changePageSize(pageSize) {
+            var url = new URL(window.location);
+            url.searchParams.set('pageSize', pageSize);
+            url.searchParams.set('page', '1'); // Reset to first page
+            window.location.href = url.toString();
+        }
+        
+        // Success message display
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                toastr.success('@TempData["SuccessMessage"]');
+            </text>
+        }
+    </script>
+}
+
+<style>
+    .search-section .card {
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .results-section .card {
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .table th {
+        border-top: none;
+        font-weight: 600;
+        font-size: 0.875rem;
+        color: #495057;
+        background-color: #f8f9fa !important;
+    }
+    
+    .pagination-container {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 15px 20px;
+        background: white;
+        border-top: 1px solid #e9ecef;
+    }
+    
+    .pagination-info {
+        color: #6c757d;
+        font-size: 14px;
+    }
+    
+    .pagination {
+        margin: 0;
+    }
+    
+    .page-link {
+        color: #007bff;
+        border: 1px solid #dee2e6;
+        padding: 6px 12px;
+    }
+    
+    .page-item.active .page-link {
+        background-color: #007bff;
+        border-color: #007bff;
+    }
+    
+    .header-section h2 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .employee-name-link:hover {
+        text-decoration: underline !important;
+    }
+</style>

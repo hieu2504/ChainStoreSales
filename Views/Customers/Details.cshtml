@@ -1,0 +1,371 @@
+@model ChainStoreSalesManagement.Domain.Entities.Customer
+
+@{
+    ViewData["Title"] = "Chi tiết khách hàng";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<div class="container-fluid" style="max-width: 1080px; margin: 0 auto;">
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <h2 class="mb-0">
+                    <i class="fas fa-user me-2"></i>
+                    Chi tiết khách hàng
+                </h2>
+                <p class="text-muted mb-0">@Model.FullName</p>
+            </div>
+            <div class="col-md-6 text-end">
+                <div class="actions-bar">
+                    <a asp-action="Edit" asp-route-id="@Model.CustomerId" class="btn btn-primary">
+                        <i class="fas fa-edit me-2"></i>Chỉnh sửa
+                    </a>
+                    <a asp-action="Index" class="btn btn-secondary">
+                        <i class="fas fa-arrow-left me-2"></i>Quay lại
+                    </a>
+                    <button type="button" class="btn btn-outline-danger" 
+                            onclick="deleteCustomer(@Model.CustomerId, '@Model.FullName')">
+                        <i class="fas fa-trash me-2"></i>Xóa
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Left Panel - Customer Details -->
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Thông tin cơ bản
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Mã khách hàng:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            <span class="badge bg-primary fs-6">@Model.Code</span>
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Họ tên:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.FullName
+                            @if (Model.Gender.HasValue)
+                            {
+                                <span class="ms-2 text-muted">
+                                    (@(Model.Gender == 1 ? "Nam" : Model.Gender == 0 ? "Nữ" : "Khác"))
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Số điện thoại:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @if (!string.IsNullOrEmpty(Model.Phone))
+                            {
+                                <a href="tel:@Model.Phone" class="text-decoration-none">
+                                    <i class="fas fa-phone me-1"></i>@Model.Phone
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa có</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Email:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @if (!string.IsNullOrEmpty(Model.Email))
+                            {
+                                <a href="mailto:@Model.Email" class="text-decoration-none">
+                                    <i class="fas fa-envelope me-1"></i>@Model.Email
+                                </a>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa có</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Mã số thuế:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @if (!string.IsNullOrEmpty(Model.TaxCode))
+                            {
+                                <span class="badge bg-info">@Model.TaxCode</span>
+                                <span class="ms-2 text-muted">(Khách hàng doanh nghiệp)</span>
+                            }
+                            else
+                            {
+                                <span class="text-muted">Không có</span>
+                                <span class="ms-2 text-muted">(Khách hàng cá nhân)</span>
+                            }
+                        </div>
+                    </div>
+
+                    @if (Model.BirthDate.HasValue)
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <strong>Ngày sinh:</strong>
+                            </div>
+                            <div class="col-md-9">
+                                @Model.BirthDate.Value.ToString("dd/MM/yyyy")
+                                <span class="ms-2 text-muted">
+                                    (Tuổi: @(DateTime.Now.Year - Model.BirthDate.Value.Year))
+                                </span>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Địa chỉ:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @if (!string.IsNullOrEmpty(Model.Address))
+                            {
+                                @Model.Address
+                            }
+                            else
+                            {
+                                <span class="text-muted">Chưa có</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="row mb-3">
+                        <div class="col-md-3">
+                            <strong>Cửa hàng:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            <span class="badge bg-secondary">@Model.Shop?.Name</span>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(Model.Note))
+                    {
+                        <div class="row mb-3">
+                            <div class="col-md-3">
+                                <strong>Ghi chú:</strong>
+                            </div>
+                            <div class="col-md-9">
+                                <div class="border rounded p-2 bg-light">
+                                    @Model.Note
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Ngày tạo:</strong>
+                        </div>
+                        <div class="col-md-9">
+                            @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Order History -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-shopping-cart me-2"></i>
+                        Lịch sử đơn hàng
+                    </h5>
+                </div>
+                <div class="card-body">
+                    @if (Model.Orders.Any())
+                    {
+                        <div class="table-responsive">
+                            <table class="table table-striped">
+                                <thead>
+                                    <tr>
+                                        <th>Mã đơn hàng</th>
+                                        <th>Ngày đặt</th>
+                                        <th>Trạng thái</th>
+                                        <th>Tổng tiền</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach (var order in Model.Orders.Take(5))
+                                    {
+                                        <tr>
+                                            <td>
+                                                <a href="#" class="text-decoration-none">@order.OrderNo</a>
+                                            </td>
+                                            <td>@order.OrderDate.ToString("dd/MM/yyyy")</td>
+                                            <td>
+                                                <span class="badge bg-success">@order.Status</span>
+                                            </td>
+                                            <td>@order.TotalAmount.ToString("N0") VNĐ</td>
+                                        </tr>
+                                    }
+                                </tbody>
+                            </table>
+                        </div>
+                        @if (Model.Orders.Count > 5)
+                        {
+                            <div class="text-center mt-3">
+                                <small class="text-muted">Và @(Model.Orders.Count - 5) đơn hàng khác...</small>
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="fas fa-shopping-cart fa-2x text-muted mb-2"></i>
+                            <p class="text-muted">Khách hàng chưa có đơn hàng nào</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Quick Actions & Stats -->
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-chart-bar me-2"></i>
+                        Thống kê nhanh
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border-end">
+                                <h4 class="text-primary mb-0">@Model.Orders.Count</h4>
+                                <small class="text-muted">Đơn hàng</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <h4 class="text-success mb-0">@Model.Orders.Sum(o => o.TotalAmount).ToString("N0")</h4>
+                            <small class="text-muted">VNĐ tổng</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-tools me-2"></i>
+                        Thao tác nhanh
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a href="#" class="btn btn-outline-primary">
+                            <i class="fas fa-plus me-2"></i>Tạo đơn hàng mới
+                        </a>
+                        <a href="#" class="btn btn-outline-info">
+                            <i class="fas fa-history me-2"></i>Xem lịch sử chi tiết
+                        </a>
+                        @if (!string.IsNullOrEmpty(Model.Phone))
+                        {
+                            <a href="tel:@Model.Phone" class="btn btn-outline-success">
+                                <i class="fas fa-phone me-2"></i>Gọi điện
+                            </a>
+                        }
+                        @if (!string.IsNullOrEmpty(Model.Email))
+                        {
+                            <a href="mailto:@Model.Email" class="btn btn-outline-secondary">
+                                <i class="fas fa-envelope me-2"></i>Gửi email
+                            </a>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="card-title">
+                        <i class="fas fa-info-circle me-2"></i>
+                        Thông tin hệ thống
+                    </h6>
+                    <small class="text-muted">
+                        <strong>ID:</strong> @Model.CustomerId<br>
+                        <strong>Ngày tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")<br>
+                        <strong>Trạng thái:</strong> 
+                        <span class="badge bg-success">Hoạt động</span>
+                    </small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form (Hidden) -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="deleteCustomerId" name="id" value="@Model.CustomerId" />
+</form>
+
+@section Scripts {
+    <script>
+        function deleteCustomer(customerId, customerName) {
+            if (confirm(`Bạn có chắc chắn muốn xóa khách hàng "${customerName}" không?\n\nLưu ý: Nếu khách hàng có đơn hàng, sẽ được lưu trữ thay vì xóa hoàn toàn.`)) {
+                const form = document.getElementById('deleteForm');
+                form.action = '@Url.Action("Delete", "Customers")/' + customerId;
+                form.submit();
+            }
+        }
+
+        // Success message display
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                toastr.success('@TempData["SuccessMessage"]');
+            </text>
+        }
+    </script>
+}
+
+<style>
+    .card {
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .card-header {
+        background-color: #f8f9fa;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    .header-section h2 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .actions-bar {
+        display: flex;
+        gap: 0.5rem;
+        flex-wrap: wrap;
+    }
+    
+    .border-end {
+        border-right: 1px solid #dee2e6 !important;
+    }
+</style>

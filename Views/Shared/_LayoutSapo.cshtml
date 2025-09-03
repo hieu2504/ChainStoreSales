@@ -6,6 +6,8 @@
     <title>@ViewData["Title"] - Chain Store Management</title>
     <link href="~/lib/bootstrap/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <style>
         * {
             margin: 0;
@@ -409,9 +411,19 @@
             <span>Quản lý kho</span>
         </a>
         
-        <a href="#" class="menu-item">
+        <a href="@Url.Action("Index", "Customers")" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Customers" ? "active" : "")">
             <i class="fas fa-users"></i>
             <span>Khách hàng</span>
+        </a>
+        
+        <a href="@Url.Action("Index", "Employees")" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Employees" ? "active" : "")">
+            <i class="fas fa-users-cog"></i>
+            <span>Nhân viên</span>
+        </a>
+        
+        <a href="@Url.Action("Index", "Branch")" class="menu-item @(ViewContext.RouteData.Values["controller"]?.ToString() == "Branch" ? "active" : "")">
+            <i class="fas fa-store-alt"></i>
+            <span>Chi nhánh</span>
         </a>
         
         <a href="#" class="menu-item">
@@ -532,6 +544,7 @@
 
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
     <script>
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
@@ -631,6 +644,29 @@
                 document.querySelector('.search-bar input').focus();
             }
         });
+    </script>
+    
+    <!-- Toastr JS -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/toastr.js/latest/toastr.min.js"></script>
+    <script>
+        // Toastr configuration
+        toastr.options = {
+            "closeButton": true,
+            "debug": false,
+            "newestOnTop": true,
+            "progressBar": true,
+            "positionClass": "toast-top-right",
+            "preventDuplicates": false,
+            "onclick": null,
+            "showDuration": "300",
+            "hideDuration": "1000",
+            "timeOut": "5000",
+            "extendedTimeOut": "1000",
+            "showEasing": "swing",
+            "hideEasing": "linear",
+            "showMethod": "fadeIn",
+            "hideMethod": "fadeOut"
+        };
     </script>
     
     @await RenderSectionAsync("Scripts", required: false)

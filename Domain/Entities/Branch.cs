@@ -29,7 +29,7 @@ namespace ChainStoreSalesManagement.Domain.Entities
         public byte[] RowVersion { get; set; } = new byte[0];
 
         // Navigation properties
-        public Shop Shop { get; set; } = null!;
+        public Shop? Shop { get; set; } = null!;
         public ICollection<Inventory> Inventories { get; set; } = new List<Inventory>();
         public ICollection<InventorySerial> InventorySerials { get; set; } = new List<InventorySerial>();
         public ICollection<Employee> Employees { get; set; } = new List<Employee>();

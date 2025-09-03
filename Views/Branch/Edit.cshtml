@@ -1,0 +1,301 @@
+@model ChainStoreSalesManagement.Domain.Entities.Branch
+
+@{
+    ViewData["Title"] = "Sửa chi nhánh";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<div class="container-fluid" style="max-width: 1080px; margin: 0 auto;">
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-0">
+                    <i class="fas fa-store-alt me-2"></i>
+                    Sửa chi nhánh
+                </h2>
+                <p class="text-muted mb-0">Cập nhật thông tin chi nhánh</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a asp-action="Details" asp-route-id="@Model.BranchId" class="btn btn-outline-info me-2">
+                    <i class="fas fa-eye me-1"></i>Chi tiết
+                </a>
+                <a asp-action="Index" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row">
+        <!-- Left Panel - Branch Information -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Thông tin chi nhánh</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Edit" method="post">
+                        <input asp-for="BranchId" type="hidden" />
+                        <input asp-for="CreatedAt" type="hidden" />
+                        <input asp-for="RowVersion" type="hidden" />
+                        
+                        <div class="row">
+                            <!-- Shop Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ShopId" class="form-label">
+                                    Cửa hàng <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="ShopId" class="form-select" required>
+                                    <option value="">-- Chọn cửa hàng --</option>
+                                    @if (ViewBag.Shops != null)
+                                    {
+                                        @foreach (var shop in ViewBag.Shops as List<ChainStoreSalesManagement.Domain.Entities.Shop>)
+                                        {
+                                            if (Model.ShopId == shop.ShopId)
+                                            {
+                                                <option value="@shop.ShopId" selected>@shop.Name</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@shop.ShopId">@shop.Name</option>
+                                            }
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="ShopId" class="text-danger"></span>
+                            </div>
+
+                            <!-- Code -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Code" class="form-label">
+                                    Mã chi nhánh <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Code" class="form-control" 
+                                       placeholder="VD: CN001, HN01, HCM01" maxlength="50" required />
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                                <small class="form-text text-muted">Mã chi nhánh phải duy nhất trong cửa hàng</small>
+                            </div>
+
+                            <!-- Name -->
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    Tên chi nhánh <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Name" class="form-control" 
+                                       placeholder="VD: Chi nhánh Hà Nội, Chi nhánh TP.HCM" required />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Address" class="form-label">Địa chỉ</label>
+                                <textarea asp-for="Address" class="form-control" rows="2" 
+                                          placeholder="Nhập địa chỉ chi tiết của chi nhánh"></textarea>
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Phone" class="form-label">Số điện thoại</label>
+                                <input asp-for="Phone" class="form-control" type="tel" 
+                                       placeholder="VD: 024.1234.5678" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+
+                            <!-- Tax Code -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TaxCode" class="form-label">Mã số thuế</label>
+                                <input asp-for="TaxCode" class="form-control" 
+                                       placeholder="VD: 0123456789" maxlength="50" />
+                                <span asp-validation-for="TaxCode" class="text-danger"></span>
+                            </div>
+
+                            <!-- Is Active -->
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        Hoạt động
+                                    </label>
+                                </div>
+                                <span asp-validation-for="IsActive" class="text-danger"></span>
+                                <small class="form-text text-muted">Chi nhánh không hoạt động sẽ không thể nhận đơn hàng</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between mt-4">
+                            <button type="button" class="btn btn-outline-danger" 
+                                    onclick="deleteBranch(@Model.BranchId, '@Model.Name')">
+                                <i class="fas fa-trash me-1"></i>Xóa
+                            </button>
+                            <div class="d-flex gap-2">
+                                <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                                <button type="submit" class="btn btn-primary">
+                                    <i class="fas fa-save me-1"></i>Cập nhật
+                                </button>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Statistics & Actions -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Thống kê</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6">
+                            <div class="border rounded p-2 mb-2">
+                                <i class="fas fa-users-cog fa-2x text-primary mb-1"></i>
+                                <div class="fw-bold">0</div>
+                                <small class="text-muted">Nhân viên</small>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="border rounded p-2 mb-2">
+                                <i class="fas fa-shopping-cart fa-2x text-success mb-1"></i>
+                                <div class="fw-bold">0</div>
+                                <small class="text-muted">Đơn hàng</small>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-1"></i>Thông tin</h6>
+                        <ul class="mb-0 ps-3">
+                            <li><strong>Ngày tạo:</strong> @Model.CreatedAt.ToString("dd/MM/yyyy HH:mm")</li>
+                            @if (Model.ModifiedAt.HasValue)
+                            {
+                                <li><strong>Lần sửa cuối:</strong> @Model.ModifiedAt.Value.ToString("dd/MM/yyyy HH:mm")</li>
+                            }
+                            <li><strong>Trạng thái:</strong> 
+                                @if (Model.IsActive)
+                                {
+                                    <span class="badge bg-success">Hoạt động</span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">Không hoạt động</span>
+                                }
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">Hành động nhanh</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <a asp-action="Details" asp-route-id="@Model.BranchId" class="btn btn-outline-info btn-sm">
+                            <i class="fas fa-eye me-1"></i>Xem chi tiết
+                        </a>
+                        @if (Model.IsActive)
+                        {
+                            <button type="button" class="btn btn-outline-warning btn-sm" 
+                                    onclick="toggleStatus(@Model.BranchId, false)">
+                                <i class="fas fa-pause me-1"></i>Tạm dừng hoạt động
+                            </button>
+                        }
+                        else
+                        {
+                            <button type="button" class="btn btn-outline-success btn-sm" 
+                                    onclick="toggleStatus(@Model.BranchId, true)">
+                                <i class="fas fa-play me-1"></i>Kích hoạt lại
+                            </button>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Form (Hidden) -->
+<form id="deleteForm" method="post" style="display: none;">
+    @Html.AntiForgeryToken()
+    <input type="hidden" id="deleteBranchId" name="id" value="" />
+</form>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        function deleteBranch(branchId, branchName) {
+            if (confirm(`Bạn có chắc chắn muốn xóa chi nhánh "${branchName}" không?\n\nLưu ý: Nếu chi nhánh có dữ liệu liên quan, sẽ được vô hiệu hóa thay vì xóa hoàn toàn.`)) {
+                document.getElementById('deleteBranchId').value = branchId;
+                const form = document.getElementById('deleteForm');
+                form.action = '@Url.Action("Delete", "Branch")/' + branchId;
+                form.submit();
+            }
+        }
+
+        function toggleStatus(branchId, isActive) {
+            const action = isActive ? 'kích hoạt' : 'tạm dừng';
+            if (confirm(`Bạn có chắc chắn muốn ${action} chi nhánh này không?`)) {
+                // Create a form to submit status change
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = '@Url.Action("Edit", "Branch")';
+                
+                // Add all current form data
+                const currentForm = document.querySelector('form[asp-action="Edit"]');
+                const formData = new FormData(currentForm);
+                
+                // Update IsActive value
+                formData.set('IsActive', isActive);
+                
+                // Add form data to new form
+                for (let [key, value] of formData.entries()) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    form.appendChild(input);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+        
+        // Success message display
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                toastr.success('@TempData["SuccessMessage"]');
+            </text>
+        }
+    </script>
+}
+
+<style>
+    .card {
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .header-section h2 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+</style>

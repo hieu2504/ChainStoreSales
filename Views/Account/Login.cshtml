@@ -85,35 +85,11 @@
             margin-bottom: 8px;
         }
 
-        .fpt-logo {
-            width: 50px;
-            height: 32px;
-            background: linear-gradient(45deg, #FF6B35, #F7931E, #4CAF50, #2196F3);
+        .fpt-logo-img {
+            width: 150px;
+            height: auto;
+            object-fit: contain;
             border-radius: 6px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            font-size: 14px;
-            color: white;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .fpt-logo::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(45deg, 
-                #FF6B35 0%, 
-                #F7931E 25%, 
-                #4CAF50 50%, 
-                #2196F3 75%, 
-                #FF6B35 100%);
-            z-index: -1;
         }
 
         .education-text {
@@ -366,10 +342,8 @@
 
         <div class="logo-section">
             <div class="logo-wrapper">
-                <div class="fpt-logo">FPT</div>
-                <span class="education-text">Education</span>
+                <img src="~/images/core/Logo_FPT.png" alt="FPT Logo" class="fpt-logo-img" />
             </div>
-            <div class="university-name">FPT UNIVERSITY</div>
         </div>
 
         <h2 class="login-title">Đăng nhập vào hệ thống</h2>

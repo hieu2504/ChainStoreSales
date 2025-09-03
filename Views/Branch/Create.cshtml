@@ -1,0 +1,206 @@
+@model ChainStoreSalesManagement.Domain.Entities.Branch
+
+@{
+    ViewData["Title"] = "Thêm chi nhánh";
+    Layout = "~/Views/Shared/_LayoutSapo.cshtml";
+}
+
+<div class="container-fluid" style="max-width: 1080px; margin: 0 auto;">
+    <!-- Header Section -->
+    <div class="header-section mb-4">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2 class="mb-0">
+                    <i class="fas fa-store-alt me-2"></i>
+                    Thêm chi nhánh
+                </h2>
+                <p class="text-muted mb-0">Thêm chi nhánh mới vào hệ thống</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <a asp-action="Index" class="btn btn-outline-secondary me-2">
+                    <i class="fas fa-arrow-left me-1"></i>Quay lại
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Form Section -->
+    <div class="row">
+        <!-- Left Panel - Branch Information -->
+        <div class="col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Thông tin chi nhánh</h6>
+                </div>
+                <div class="card-body">
+                    <form asp-action="Create" method="post">
+                        <div class="row">
+                            <!-- Shop Selection -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="ShopId" class="form-label">
+                                    Cửa hàng <span class="text-danger">*</span>
+                                </label>
+                                <select asp-for="ShopId" class="form-select" required>
+                                    <option value="">-- Chọn cửa hàng --</option>
+                                    @if (ViewBag.Shops != null)
+                                    {
+                                        @foreach (var shop in ViewBag.Shops as List<ChainStoreSalesManagement.Domain.Entities.Shop>)
+                                        {
+                                            <option value="@shop.ShopId">@shop.Name</option>
+                                        }
+                                    }
+                                </select>
+                                <span asp-validation-for="ShopId" class="text-danger"></span>
+                            </div>
+
+                            <!-- Code -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Code" class="form-label">
+                                    Mã chi nhánh <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Code" class="form-control" 
+                                       placeholder="VD: CN001, HN01, HCM01" maxlength="50" required />
+                                <span asp-validation-for="Code" class="text-danger"></span>
+                                <small class="form-text text-muted">Mã chi nhánh phải duy nhất trong cửa hàng</small>
+                            </div>
+
+                            <!-- Name -->
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Name" class="form-label">
+                                    Tên chi nhánh <span class="text-danger">*</span>
+                                </label>
+                                <input asp-for="Name" class="form-control" 
+                                       placeholder="VD: Chi nhánh Hà Nội, Chi nhánh TP.HCM" required />
+                                <span asp-validation-for="Name" class="text-danger"></span>
+                            </div>
+
+                            <!-- Address -->
+                            <div class="col-md-12 mb-3">
+                                <label asp-for="Address" class="form-label">Địa chỉ</label>
+                                <textarea asp-for="Address" class="form-control" rows="2" 
+                                          placeholder="Nhập địa chỉ chi tiết của chi nhánh"></textarea>
+                                <span asp-validation-for="Address" class="text-danger"></span>
+                            </div>
+
+                            <!-- Phone -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="Phone" class="form-label">Số điện thoại</label>
+                                <input asp-for="Phone" class="form-control" type="tel" 
+                                       placeholder="VD: 024.1234.5678" />
+                                <span asp-validation-for="Phone" class="text-danger"></span>
+                            </div>
+
+                            <!-- Tax Code -->
+                            <div class="col-md-6 mb-3">
+                                <label asp-for="TaxCode" class="form-label">Mã số thuế</label>
+                                <input asp-for="TaxCode" class="form-control" 
+                                       placeholder="VD: 0123456789" maxlength="50" />
+                                <span asp-validation-for="TaxCode" class="text-danger"></span>
+                            </div>
+
+                            <!-- Is Active -->
+                            <div class="col-md-12 mb-3">
+                                <div class="form-check form-switch">
+                                    <input asp-for="IsActive" class="form-check-input" type="checkbox" checked />
+                                    <label asp-for="IsActive" class="form-check-label">
+                                        Hoạt động
+                                    </label>
+                                </div>
+                                <span asp-validation-for="IsActive" class="text-danger"></span>
+                                <small class="form-text text-muted">Chi nhánh hoạt động sẽ có thể nhận đơn hàng và quản lý kho</small>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-end gap-2 mt-4">
+                            <a asp-action="Index" class="btn btn-outline-secondary">Hủy</a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save me-1"></i>Lưu
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Instructions -->
+        <div class="col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">Hướng dẫn</h6>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="fas fa-info-circle me-1"></i>Lưu ý quan trọng</h6>
+                        <ul class="mb-0 ps-3">
+                            <li><strong>Mã chi nhánh:</strong> Phải duy nhất trong từng cửa hàng</li>
+                            <li><strong>Tên chi nhánh:</strong> Nên đặt tên rõ ràng, dễ nhận biết</li>
+                            <li><strong>Địa chỉ:</strong> Nhập đầy đủ để thuận tiện giao hàng</li>
+                            <li><strong>Trạng thái:</strong> Chi nhánh không hoạt động sẽ không thể nhận đơn hàng</li>
+                        </ul>
+                    </div>
+
+                    <div class="mt-3">
+                        <h6>Ví dụ mã chi nhánh</h6>
+                        <div class="border rounded p-2 bg-light">
+                            <small class="text-muted">
+                                • CN001, CN002, CN003<br>
+                                • HN01, HCM01, DN01<br>
+                                • MAIN, SUB1, SUB2
+                            </small>
+                        </div>
+                    </div>
+
+                    <div class="mt-3">
+                        <h6>Chức năng sau khi tạo</h6>
+                        <p class="small text-muted">
+                            Chi nhánh sau khi tạo có thể:
+                        </p>
+                        <ul class="small text-muted">
+                            <li>Quản lý nhân viên</li>
+                            <li>Quản lý kho hàng</li>
+                            <li>Xử lý đơn hàng</li>
+                            <li>Báo cáo doanh số</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    @{await Html.RenderPartialAsync("_ValidationScriptsPartial");}
+    
+    <script>
+        // Success message display
+        @if (TempData["SuccessMessage"] != null)
+        {
+            <text>
+                toastr.success('@TempData["SuccessMessage"]');
+            </text>
+        }
+    </script>
+}
+
+<style>
+    .card {
+        border: 1px solid #e9ecef;
+        box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+    }
+    
+    .header-section h2 {
+        color: #2c3e50;
+        font-weight: 600;
+    }
+    
+    .form-label {
+        font-weight: 500;
+        color: #495057;
+    }
+    
+    .form-control:focus,
+    .form-select:focus {
+        border-color: #007bff;
+        box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+    }
+</style>

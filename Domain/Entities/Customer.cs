@@ -43,7 +43,7 @@ namespace ChainStoreSalesManagement.Domain.Entities
         public byte[] RowVersion { get; set; } = new byte[0];
 
         // Navigation properties
-        public Shop Shop { get; set; } = null!;
+        public Shop? Shop { get; set; } = null!;
         public ICollection<Order> Orders { get; set; } = new List<Order>();
         public ICollection<CouponRedemption> CouponRedemptions { get; set; } = new List<CouponRedemption>();
     }
